@@ -87,7 +87,7 @@ public class UsuarioService {
         }
 
         // Checa se o usuário está em uso.
-        if (clienteRepository.existsByUsuarioId(id) || profissionalRepository.existsByUsuarioId(id)) {
+        if (clienteRepository.existsById(id) || profissionalRepository.existsById(id)) {
             throw new IllegalStateException("Não é possível deletar o usuário pois ele está associado a um cliente ou profissional.");
         }
 

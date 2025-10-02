@@ -16,8 +16,8 @@ public class RelatorioEntity {
 
     private Float acuracia;
 
-    private String analisefono;
-
+    private String analiseFono;
+    
     // Relatório pertence a um Chat
     @OneToOne
     @JoinColumn(name = "chat_id", nullable = false, unique = true)

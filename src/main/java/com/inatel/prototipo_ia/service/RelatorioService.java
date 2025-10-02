@@ -75,7 +75,7 @@ public class RelatorioService {
 
         // Atualiza os campos permitidos. Não permitimos a troca do chat associado.
         relatorioExistente.setAcuracia(relatorioAtualizado.getAcuracia());
-        relatorioExistente.setAnalisefono(relatorioAtualizado.getAnalisefono());
+        relatorioExistente.setAnaliseFono(relatorioAtualizado.getAnaliseFono());
 
         return relatorioRepository.save(relatorioExistente);
     }
@@ -100,7 +100,7 @@ public class RelatorioService {
         if (relatorio.getChat() == null || relatorio.getChat().getId() == null) {
             throw new IllegalArgumentException("O relatório deve estar associado a um chat.");
         }
-        if (relatorio.getAnalisefono() == null || relatorio.getAnalisefono().isBlank()) {
+        if (relatorio.getAnaliseFono() == null || relatorio.getAnaliseFono().isBlank()) {
             throw new IllegalArgumentException("A análise do fonoaudiólogo é obrigatória.");
         }
         if (relatorio.getAcuracia() == null || relatorio.getAcuracia() < 0.0 || relatorio.getAcuracia() > 1.0) {

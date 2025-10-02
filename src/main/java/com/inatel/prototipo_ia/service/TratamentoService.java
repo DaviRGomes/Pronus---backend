@@ -71,8 +71,8 @@ public class TratamentoService {
         TratamentoEntity tratamentoExistente = optionalTratamento.get();
         validarTratamento(tratamentoAtualizado);
         
-        tratamentoExistente.setTipotratamento(tratamentoAtualizado.getTipotratamento());
-        tratamentoExistente.setQuantidadedia(tratamentoAtualizado.getQuantidadedia());
+        tratamentoExistente.setTipoTratamento(tratamentoAtualizado.getTipoTratamento());
+        tratamentoExistente.setQuantidadeDia(tratamentoAtualizado.getQuantidadeDia());
 
         return tratamentoRepository.save(tratamentoExistente);
     }
@@ -98,10 +98,10 @@ public class TratamentoService {
         if (tratamento.getProfissional() == null || tratamento.getProfissional().getId() == null) {
             throw new IllegalArgumentException("O tratamento deve estar associado a um profissional.");
         }
-        if (tratamento.getTipotratamento() == null || tratamento.getTipotratamento().isBlank()) {
+        if (tratamento.getTipoTratamento() == null || tratamento.getTipoTratamento().isBlank()) {
             throw new IllegalArgumentException("O tipo de tratamento é obrigatório.");
         }
-        if (tratamento.getQuantidadedia() == null || tratamento.getQuantidadedia() <= 0) {
+        if (tratamento.getQuantidadeDia() == null || tratamento.getQuantidadeDia() <= 0) {
             throw new IllegalArgumentException("A quantidade de dias deve ser um número positivo.");
         }
     }

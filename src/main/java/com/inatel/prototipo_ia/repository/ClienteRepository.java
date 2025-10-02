@@ -21,7 +21,4 @@ public interface ClienteRepository extends JpaRepository<ClienteEntity, Long> {
     // Buscar clientes por nível e idade mínima
     @Query("SELECT c FROM ClienteEntity c WHERE c.nivel = :nivel AND c.idade >= :idade")
     List<ClienteEntity> findByNivelAndIdadeMinima(@Param("nivel") String nivel, @Param("idade") Integer idade);
-
-    // Verifica se existe um cliente associado a um ID de cliente.
-    boolean existsByUsuarioId(Long usuarioId);
 }

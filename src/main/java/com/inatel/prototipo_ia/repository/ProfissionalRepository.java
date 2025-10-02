@@ -23,7 +23,4 @@ public interface ProfissionalRepository extends JpaRepository<ProfissionalEntity
     // Buscar profissionais por experiência mínima e idade mínima
     @Query("SELECT p FROM ProfissionalEntity p WHERE p.experiencia >= :experiencia AND p.idade >= :idade")
     List<ProfissionalEntity> findByExperienciaAndIdadeMinima(@Param("experiencia") Integer experiencia, @Param("idade") Integer idade);
-
-    // Verifica se existe um profissional associado a um ID de cliente.
-    boolean existsByUsuarioId(Long usuarioId);
 }
