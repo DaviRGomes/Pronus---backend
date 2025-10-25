@@ -18,6 +18,12 @@ public class TratamentoEntity {
 
     private String tipoTratamento;
 
+    private Boolean personalizado;
+
+    @ManyToOne
+    @JoinColumn(name = "conteudoTeste_id")
+    private ConteudoTesteEntity conteudoTeste;
+
     // Muitos tratamentos para um profissional
     @ManyToOne
     @JoinColumn(name = "profissional_id", nullable = false)
