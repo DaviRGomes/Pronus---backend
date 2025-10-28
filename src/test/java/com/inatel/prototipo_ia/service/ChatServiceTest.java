@@ -8,16 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.inatel.prototipo_ia.entity.ChatEntity;
-import com.inatel.prototipo_ia.entity.ClienteEntity;
-import com.inatel.prototipo_ia.entity.ProfissionalEntity;
-import org.junit.jupiter.api.Test;
-
-import java.util.Optional; 
-import static org.assertj.core.api.Assertions.assertThat; // Importações estáticas para asserções
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
