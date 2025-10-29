@@ -1,5 +1,7 @@
 package com.inatel.prototipo_ia.service;
 
+import com.inatel.prototipo_ia.dto.in.ChatDtoIn;
+import com.inatel.prototipo_ia.dto.out.ChatDtoOut;
 import com.inatel.prototipo_ia.entity.ChatEntity;
 import com.inatel.prototipo_ia.entity.ClienteEntity;
 import com.inatel.prototipo_ia.entity.ProfissionalEntity;
@@ -12,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -28,63 +31,57 @@ public class ChatService {
     }
 
     /**
-     * Cria um novo chat após validar os participantes.
+     * Cria um novo chat a partir de DTO In e retorna DTO Out.
      */
-    public ChatEntity criar(ChatEntity chat) {
-        // validacao da estrutura
-        validarDadosDoChat(chat);
+    public ChatDtoOut criar(ChatDtoIn chatDto) {
+        validarChatDto(chatDto);
 
-        // Validacao da integridade do cliente
-        Optional<ClienteEntity> optionalCliente = clienteRepository.findById(chat.getCliente().getId());
+        // Validação da integridade do cliente
+        Optional<ClienteEntity> optionalCliente = clienteRepository.findById(chatDto.getClienteId());
         if (optionalCliente.isEmpty()) {
-            throw new EntityNotFoundException("Cliente não encontrado com o ID: " + chat.getCliente().getId());
+            throw new EntityNotFoundException("Cliente não encontrado com o ID: " + chatDto.getClienteId());
         }
         ClienteEntity cliente = optionalCliente.get();
 
-        // validacao da integridade do profissional
-        Optional<ProfissionalEntity> optionalProfissional = profissionalRepository.findById(chat.getProfissional().getId());
+        // Validação da integridade do profissional
+        Optional<ProfissionalEntity> optionalProfissional = profissionalRepository.findById(chatDto.getProfissionalId());
         if (optionalProfissional.isEmpty()) {
-            throw new EntityNotFoundException("Profissional não encontrado com o ID: " + chat.getProfissional().getId());
+            throw new EntityNotFoundException("Profissional não encontrado com o ID: " + chatDto.getProfissionalId());
         }
         ProfissionalEntity profissional = optionalProfissional.get();
         
-        chat.setCliente(cliente);
-        chat.setProfissional(profissional);
+        ChatEntity entity = new ChatEntity();
+        aplicarDtoNoEntity(entity, chatDto);
+        entity.setCliente(cliente);
+        entity.setProfissional(profissional);
 
-        return chatRepository.save(chat);
+        ChatEntity salvo = chatRepository.save(entity);
+        return toDto(salvo);
     }
 
     /**
-     * Atualiza um chat existente.
+     * Atualiza um chat existente via DTO In e retorna DTO Out.
      */
-    public ChatEntity atualizar(Long id, ChatEntity chatAtualizado) {
-
+    public ChatDtoOut atualizar(Long id, ChatDtoIn chatDto) {
         Optional<ChatEntity> optionalChat = chatRepository.findById(id);
 
         if (optionalChat.isEmpty()) {
             throw new EntityNotFoundException("Chat não encontrado com o ID: " + id);
         }
 
-        ChatEntity chatExistente = optionalChat.get();
+        validarChatDto(chatDto);
 
-        chatExistente.setDuracao(chatAtualizado.getDuracao());
-        chatExistente.setConversa(chatAtualizado.getConversa());
+        ChatEntity existente = optionalChat.get();
+        aplicarDtoNoEntity(existente, chatDto);
 
-        return chatRepository.save(chatExistente);
-    }
-
-    public ChatEntity atualizar(ChatEntity chatAtualizado) {
-        if (chatAtualizado == null || chatAtualizado.getId() == null) {
-            throw new IllegalArgumentException("O chat para atualização deve ter um ID.");
-        }
-        return atualizar(chatAtualizado.getId(), chatAtualizado);
+        ChatEntity atualizado = chatRepository.save(existente);
+        return toDto(atualizado);
     }
 
     /**
      * Deleta um chat pelo seu ID.
      */
     public void deletar(Long id) {
-        
         if (!chatRepository.existsById(id)) {
             throw new EntityNotFoundException("Chat não encontrado com o ID: " + id);
         }
@@ -93,56 +90,108 @@ public class ChatService {
     }
 
     /**
-     * Busca todos os chats cadastrados.
+     * Busca todos os chats cadastrados e retorna lista de DTOs de saída.
      */
-    public List<ChatEntity> buscarTodos() {
-        return chatRepository.findAll();
+    public List<ChatDtoOut> buscarTodos() {
+        return chatRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Busca um chat específico pelo seu ID.
+     * Busca um chat específico pelo seu ID e retorna DTO de saída.
      */
-    public Optional<ChatEntity> buscarPorId(Long id) {
-        return chatRepository.findById(id);
+    public Optional<ChatDtoOut> buscarPorId(Long id) {
+        return chatRepository.findById(id).map(this::toDto);
     }
 
     /**
      * Busca todos os chats de um cliente específico.
      */
-    public List<ChatEntity> buscarPorClienteId(Long clienteId) {
-        return chatRepository.findByClienteId(clienteId);
+    public List<ChatDtoOut> buscarPorClienteId(Long clienteId) {
+        return chatRepository.findByClienteId(clienteId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
      * Busca todos os chats de um profissional específico.
      */
-    public List<ChatEntity> buscarPorProfissionalId(Long profissionalId) {
-        return chatRepository.findByProfissionalId(profissionalId);
+    public List<ChatDtoOut> buscarPorProfissionalId(Long profissionalId) {
+        return chatRepository.findByProfissionalId(profissionalId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
      * Busca chats com duração maior que um valor especificado.
      */
-    public List<ChatEntity> buscarComDuracaoMaiorQue(Integer minutos) {
+    public List<ChatDtoOut> buscarComDuracaoMaiorQue(Integer minutos) {
         if (minutos == null || minutos < 0) {
             throw new IllegalArgumentException("A duração em minutos deve ser um número positivo.");
         }
-        return chatRepository.findByDuracaoGreaterThan(minutos);
+        return chatRepository.findByDuracaoGreaterThan(minutos)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<ChatEntity> buscarChatsLongos() {
-        return chatRepository.findChatsLongos();
+    /**
+     * Busca chats longos (usando query customizada do repository).
+     */
+    public List<ChatDtoOut> buscarChatsLongos() {
+        return chatRepository.findChatsLongos()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    private void validarDadosDoChat(ChatEntity chat) {
+    /**
+     * Conversor de Entidade -> DTO Out.
+     */
+    private ChatDtoOut toDto(ChatEntity entity) {
+        Long relatorioId = (entity.getRelatorio() != null) 
+                ? entity.getRelatorio().getId() 
+                : null;
+
+        ChatDtoOut dto = new ChatDtoOut();
+        dto.setId(entity.getId());
+        dto.setDuracao(entity.getDuracao());
+        dto.setConversa(entity.getConversa());
+        dto.setClienteId(entity.getCliente().getId());
+        dto.setProfissionalId(entity.getProfissional().getId());
+        dto.setRelatorioId(relatorioId);
+        return dto;
+    }
+
+    /**
+     * Aplica os campos do DTO In na entidade (create/update).
+     * Não altera cliente e profissional no update.
+     */
+    private void aplicarDtoNoEntity(ChatEntity destino, ChatDtoIn fonte) {
+        destino.setDuracao(fonte.getDuracao());
+        destino.setConversa(fonte.getConversa());
+        // Nota: clienteId e profissionalId não são atualizados após criação
+    }
+
+    /**
+     * Validação do DTO de entrada.
+     */
+    private void validarChatDto(ChatDtoIn chat) {
         if (chat == null) {
             throw new IllegalArgumentException("O objeto de chat não pode ser nulo.");
         }
-        if (chat.getCliente() == null || chat.getCliente().getId() == null) {
+        if (chat.getClienteId() == null) {
             throw new IllegalArgumentException("O cliente associado ao chat é obrigatório.");
         }
-        if (chat.getProfissional() == null || chat.getProfissional().getId() == null) {
+        if (chat.getProfissionalId() == null) {
             throw new IllegalArgumentException("O profissional associado ao chat é obrigatório.");
+        }
+        if (chat.getDuracao() != null && chat.getDuracao() < 0) {
+            throw new IllegalArgumentException("A duração não pode ser negativa.");
         }
     }
 }
