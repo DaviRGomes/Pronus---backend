@@ -1,6 +1,7 @@
 package com.inatel.prototipo_ia.controller;
 
-import com.inatel.prototipo_ia.entity.UsuarioEntity;
+import com.inatel.prototipo_ia.dto.in.UsuarioDtoIn;
+import com.inatel.prototipo_ia.dto.out.UsuarioDtoOut;
 import com.inatel.prototipo_ia.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,39 +19,37 @@ public class UsuarioController {
 
     // Criar usuário
     @PostMapping
-    public ResponseEntity<UsuarioEntity> criar(@RequestBody UsuarioEntity usuario) {
-        UsuarioEntity usuarioCriado = service.criar(usuario);
+    public ResponseEntity<UsuarioDtoOut> criar(@RequestBody UsuarioDtoIn usuario) {
+        UsuarioDtoOut usuarioCriado = service.criar(usuario);
         return ResponseEntity.ok(usuarioCriado);
     }
 
     // Buscar todos os usuários
     @GetMapping
-    public ResponseEntity<List<UsuarioEntity>> buscarTodos() {
-        List<UsuarioEntity> usuarios = service.buscarTodos();
+    public ResponseEntity<List<UsuarioDtoOut>> buscarTodos() {
+        List<UsuarioDtoOut> usuarios = service.buscarTodos();
         return ResponseEntity.ok(usuarios);
     }
 
     // Buscar usuário por ID
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioEntity> buscarPorId(@PathVariable Long id) {
-        Optional<UsuarioEntity> usuario = service.buscarPorId(id);
+    public ResponseEntity<UsuarioDtoOut> buscarPorId(@PathVariable Long id) {
+        Optional<UsuarioDtoOut> usuario = service.buscarPorId(id);
         return usuario.map(ResponseEntity::ok)
                      .orElse(ResponseEntity.notFound().build());
     }
 
-
     // Buscar usuários por idade
     @GetMapping("/idade/{idade}")
-    public ResponseEntity<List<UsuarioEntity>> buscarPorIdade(@PathVariable Integer idade) {
-        List<UsuarioEntity> usuarios = service.buscarPorIdade(idade);
+    public ResponseEntity<List<UsuarioDtoOut>> buscarPorIdade(@PathVariable Integer idade) {
+        List<UsuarioDtoOut> usuarios = service.buscarPorIdade(idade);
         return ResponseEntity.ok(usuarios);
     }
 
     // Atualizar usuário
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioEntity> atualizar(@PathVariable Long id, @RequestBody UsuarioEntity usuario) {
-        usuario.setId(id);
-        UsuarioEntity usuarioAtualizado = service.atualizar(usuario);
+    public ResponseEntity<UsuarioDtoOut> atualizar(@PathVariable Long id, @RequestBody UsuarioDtoIn usuario) {
+        UsuarioDtoOut usuarioAtualizado = service.atualizar(id, usuario);
         return ResponseEntity.ok(usuarioAtualizado);
     }
 
@@ -60,6 +59,7 @@ public class UsuarioController {
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
     // Removidos os endpoints:
     // - /maiores-idade
     // - /nome/{nome}

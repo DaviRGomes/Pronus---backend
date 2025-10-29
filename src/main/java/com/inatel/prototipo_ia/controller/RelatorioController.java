@@ -1,6 +1,7 @@
 package com.inatel.prototipo_ia.controller;
 
-import com.inatel.prototipo_ia.entity.RelatorioEntity;
+import com.inatel.prototipo_ia.dto.in.RelatorioDtoIn;
+import com.inatel.prototipo_ia.dto.out.RelatorioDtoOut;
 import com.inatel.prototipo_ia.service.RelatorioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,39 +19,38 @@ public class RelatorioController {
 
     // Criar relatório
     @PostMapping
-    public ResponseEntity<RelatorioEntity> criar(@RequestBody RelatorioEntity relatorio) {
-        RelatorioEntity relatorioCriado = service.criar(relatorio);
+    public ResponseEntity<RelatorioDtoOut> criar(@RequestBody RelatorioDtoIn relatorio) {
+        RelatorioDtoOut relatorioCriado = service.criar(relatorio);
         return ResponseEntity.ok(relatorioCriado);
     }
 
     // Buscar todos os relatórios
     @GetMapping
-    public ResponseEntity<List<RelatorioEntity>> buscarTodos() {
-        List<RelatorioEntity> relatorios = service.buscarTodos();
+    public ResponseEntity<List<RelatorioDtoOut>> buscarTodos() {
+        List<RelatorioDtoOut> relatorios = service.buscarTodos();
         return ResponseEntity.ok(relatorios);
     }
 
     // Buscar relatório por ID
     @GetMapping("/{id}")
-    public ResponseEntity<RelatorioEntity> buscarPorId(@PathVariable Long id) {
-        Optional<RelatorioEntity> relatorio = service.buscarPorId(id);
+    public ResponseEntity<RelatorioDtoOut> buscarPorId(@PathVariable Long id) {
+        Optional<RelatorioDtoOut> relatorio = service.buscarPorId(id);
         return relatorio.map(ResponseEntity::ok)
                        .orElse(ResponseEntity.notFound().build());
     }
 
     // Buscar relatório por ID do chat
     @GetMapping("/chat/{chatId}")
-    public ResponseEntity<RelatorioEntity> buscarPorChatId(@PathVariable Long chatId) {
-        Optional<RelatorioEntity> relatorio = service.buscarPorChatId(chatId);
+    public ResponseEntity<RelatorioDtoOut> buscarPorChatId(@PathVariable Long chatId) {
+        Optional<RelatorioDtoOut> relatorio = service.buscarPorChatId(chatId);
         return relatorio.map(ResponseEntity::ok)
                        .orElse(ResponseEntity.notFound().build());
     }
 
     // Atualizar relatório
     @PutMapping("/{id}")
-    public ResponseEntity<RelatorioEntity> atualizar(@PathVariable Long id, @RequestBody RelatorioEntity relatorio) {
-        relatorio.setId(id);
-        RelatorioEntity relatorioAtualizado = service.atualizar(relatorio);
+    public ResponseEntity<RelatorioDtoOut> atualizar(@PathVariable Long id, @RequestBody RelatorioDtoIn relatorio) {
+        RelatorioDtoOut relatorioAtualizado = service.atualizar(id, relatorio);
         return ResponseEntity.ok(relatorioAtualizado);
     }
 
