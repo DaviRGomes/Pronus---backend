@@ -1,4 +1,4 @@
--- V5: Seed de agenda (muitos clientes, especialistas, disponibilidades e consultas)
+-- V4: Seed de agenda (muitos clientes, especialistas, disponibilidades e consultas)
 -- Idempotente: usa NOT EXISTS e ON CONFLICT em chaves.
 -- Requer tabelas de V1/V2 já aplicadas.
 
