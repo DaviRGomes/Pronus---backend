@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DetalheErro")
+@Table(name = "detalherro")
 @Getter
 @Setter
 public class DetalheErroEntity {
@@ -14,10 +14,13 @@ public class DetalheErroEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "fonemaesperado")
     private String fonemaEsperado;
 
+    @Column(name = "fonemaproduzido")
     private String fonemaProduzido;
 
+    @Column(name = "scoredesvio")
     private Float scoreDesvio;
 
     @ManyToOne

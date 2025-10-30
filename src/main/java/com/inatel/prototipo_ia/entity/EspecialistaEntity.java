@@ -11,6 +11,7 @@ import lombok.Setter;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class EspecialistaEntity extends UsuarioEntity {
 
+    @Column(name = "crmfono")
     private String crmFono;
 
     private String especialidade;

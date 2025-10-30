@@ -19,8 +19,10 @@ public class DisponibilidadeEntity {
 
     private LocalDate data;
 
+    @Column(name = "horainicio")
     private LocalTime horaInicio;
 
+    @Column(name = "horafim")
     private LocalTime horaFim;
 
     private String status;

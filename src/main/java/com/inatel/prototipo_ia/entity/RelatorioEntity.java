@@ -16,7 +16,8 @@ public class RelatorioEntity {
 
     private Float acuracia;
 
-    private String analiseFono;
+    @Column(name = "analisefono")   
+    private String analiseFono; 
     
     // Relatório pertence a um Chat
     @OneToOne

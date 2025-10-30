@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "ConteudoTeste")
+@Table(name = "conteudoteste")
 @Getter
 @Setter
 public class ConteudoTesteEntity {
@@ -14,10 +14,10 @@ public class ConteudoTesteEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "textofrase", columnDefinition = "TEXT")
     private String textoFrase;
 
-    @Column(columnDefinition = "JSONB")
+    @Column(name = "fonemaschave", columnDefinition = "TEXT")
     private String fonemasChave; // JSON armazenado como String
 
     private String dificuldade;

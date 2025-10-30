@@ -18,8 +18,10 @@ public class CertificadoEntity {
 
     private String nome;
 
+    @Column(name = "dataemissao")
     private LocalDate dataEmissao;
 
+    @Column(name = "nivelalcancado")
     private String nivelAlcancado;
 
     @ManyToOne
