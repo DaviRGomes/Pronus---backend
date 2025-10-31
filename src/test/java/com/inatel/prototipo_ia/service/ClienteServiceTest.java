@@ -43,7 +43,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve criar cliente com sucesso quando dados válidos")
         void deveCriarClienteComSucesso() {
-            // Arrange
             ClienteDtoIn clienteDto = new ClienteDtoIn();
             clienteDto.setNome("João Silva");
             clienteDto.setIdade(25);
@@ -59,10 +58,8 @@ class ClienteServiceTest {
 
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteSalvo);
 
-            // Act
             ClienteDtoOut resultado = clienteService.salvar(clienteDto);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(1L);
             assertThat(resultado.getNome()).isEqualTo("João Silva");
@@ -76,7 +73,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando nome está em branco")
         void deveLancarExcecao_QuandoNomeEstaBranco() {
-            // Arrange
             ClienteDtoIn clienteDto = new ClienteDtoIn();
             clienteDto.setNome("   ");
             clienteDto.setIdade(25);
@@ -108,7 +104,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve buscar todos os clientes com sucesso")
         void deveBuscarTodosOsClientes() {
-            // Arrange
             ClienteEntity cliente1 = new ClienteEntity();
             cliente1.setId(1L);
             cliente1.setNome("Cliente 1");
@@ -123,10 +118,8 @@ class ClienteServiceTest {
 
             when(clienteRepository.findAll()).thenReturn(Arrays.asList(cliente1, cliente2));
 
-            // Act
             List<ClienteDtoOut> resultados = clienteService.buscarTodos();
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados.get(0).getNome()).isEqualTo("Cliente 1");
             assertThat(resultados.get(1).getNome()).isEqualTo("Cliente 2");
@@ -136,7 +129,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve buscar cliente por ID com sucesso")
         void deveBuscarClientePorId() {
-            // Arrange
             ClienteEntity cliente = new ClienteEntity();
             cliente.setId(10L);
             cliente.setNome("Maria Santos");
@@ -145,10 +137,8 @@ class ClienteServiceTest {
 
             when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
 
-            // Act
             Optional<ClienteDtoOut> resultado = clienteService.buscarPorId(10L);
 
-            // Assert
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getId()).isEqualTo(10L);
             assertThat(resultado.get().getNome()).isEqualTo("Maria Santos");
@@ -158,13 +148,10 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve retornar vazio quando cliente não existe")
         void deveRetornarVazio_QuandoClienteNaoExiste() {
-            // Arrange
             when(clienteRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act
             Optional<ClienteDtoOut> resultado = clienteService.buscarPorId(999L);
 
-            // Assert
             assertThat(resultado).isEmpty();
             verify(clienteRepository, times(1)).findById(999L);
         }
@@ -177,7 +164,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve atualizar os dados de um cliente com sucesso")
         void deveAtualizarClienteComSucesso() {
-            // Arrange
             Long clienteId = 1L;
 
             ClienteEntity clienteExistente = new ClienteEntity();
@@ -200,10 +186,8 @@ class ClienteServiceTest {
             when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(clienteExistente));
             when(clienteRepository.save(any(ClienteEntity.class))).thenReturn(clienteAtualizado);
 
-            // Act
             ClienteDtoOut resultado = clienteService.atualizar(clienteId, dadosAtualizados);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(clienteId);
             assertThat(resultado.getNome()).isEqualTo("Nome Novo e Atualizado");
@@ -216,7 +200,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao atualizar cliente inexistente")
         void deveLancarExcecao_QuandoAtualizarClienteInexistente() {
-            // Arrange
             ClienteDtoIn dadosAtualizados = new ClienteDtoIn();
             dadosAtualizados.setNome("Novo Nome");
 
@@ -238,21 +221,17 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve deletar cliente com sucesso quando não vinculado a chat")
         void deveDeletarClienteComSucesso() {
-            // Arrange
             when(clienteRepository.existsById(10L)).thenReturn(true);
             when(chatRepository.existsByClienteId(10L)).thenReturn(false);
 
-            // Act
             clienteService.deletar(10L);
 
-            // Assert
             verify(clienteRepository, times(1)).deleteById(10L);
         }
 
         @Test
         @DisplayName("Deve lançar exceção ao deletar cliente inexistente")
         void deveLancarExcecao_QuandoDeletarClienteInexistente() {
-            // Arrange
             when(clienteRepository.existsById(999L)).thenReturn(false);
 
             // Act & Assert
@@ -266,7 +245,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao deletar cliente vinculado a chat")
         void deveLancarExcecao_QuandoDeletarClienteVinculadoAChat() {
-            // Arrange
             when(clienteRepository.existsById(5L)).thenReturn(true);
             when(chatRepository.existsByClienteId(5L)).thenReturn(true);
 
@@ -286,7 +264,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve buscar clientes maiores de idade")
         void deveBuscarClientesMaioresDeIdade() {
-            // Arrange
             ClienteEntity cliente1 = new ClienteEntity();
             cliente1.setId(1L);
             cliente1.setNome("João Adulto");
@@ -299,10 +276,8 @@ class ClienteServiceTest {
 
             when(clienteRepository.findClientesMaioresDeIdade()).thenReturn(Arrays.asList(cliente1, cliente2));
 
-            // Act
             List<ClienteDtoOut> resultados = clienteService.buscarMaioresDeIdade();
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados.get(0).getIdade()).isGreaterThanOrEqualTo(18);
             assertThat(resultados.get(1).getIdade()).isGreaterThanOrEqualTo(18);
@@ -312,7 +287,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve buscar clientes por nível com sucesso")
         void deveBuscarClientesPorNivel() {
-            // Arrange
             ClienteEntity cliente1 = new ClienteEntity();
             cliente1.setId(1L);
             cliente1.setNome("Cliente Avançado 1");
@@ -325,10 +299,8 @@ class ClienteServiceTest {
 
             when(clienteRepository.findByNivel("Avançado")).thenReturn(Arrays.asList(cliente1, cliente2));
 
-            // Act
             List<ClienteDtoOut> resultados = clienteService.buscarPorNivel("Avançado");
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados).allMatch(c -> c.getNivel().equals("Avançado"));
             verify(clienteRepository, times(1)).findByNivel("Avançado");
