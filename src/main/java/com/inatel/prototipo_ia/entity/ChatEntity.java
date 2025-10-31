@@ -16,7 +16,7 @@ public class ChatEntity {
 
     private Integer duracao;
 
-    @Lob
+    @Column(name = "conversa", columnDefinition = "TEXT")
     private String conversa;
 
     // Muitos chats para um cliente

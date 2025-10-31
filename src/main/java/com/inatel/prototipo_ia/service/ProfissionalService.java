@@ -1,5 +1,7 @@
 package com.inatel.prototipo_ia.service;
 
+import com.inatel.prototipo_ia.dto.in.ProfissionalDtoIn;
+import com.inatel.prototipo_ia.dto.out.ProfissionalDtoOut;
 import com.inatel.prototipo_ia.entity.ProfissionalEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ProfissionalRepository;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -26,51 +29,51 @@ public class ProfissionalService {
     }
 
     /**
-     * Cria um novo perfil de profissional (e o usuário base correspondente).
+     * Cria um novo profissional a partir de DTO In e retorna DTO Out.
      */
-    public ProfissionalEntity criar(ProfissionalEntity profissional) {
-        validarProfissional(profissional);
+    public ProfissionalDtoOut criar(ProfissionalDtoIn profissionalDto) {
+        validarProfissionalDto(profissionalDto);
 
-        if (profissional.getId() != null && profissionalRepository.existsById(profissional.getId())) {
-            throw new IllegalStateException("Já existe um profissional com o ID de usuário: " + profissional.getId());
-        }
+        ProfissionalEntity entity = new ProfissionalEntity();
+        aplicarDtoNoEntity(entity, profissionalDto);
 
-        return profissionalRepository.save(profissional);
+        ProfissionalEntity salvo = profissionalRepository.save(entity);
+        return toDto(salvo);
     }
 
     /**
-     * Busca todos os profissionais cadastrados.
+     * Busca todos os profissionais e retorna lista de DTOs de saída.
      */
-    public List<ProfissionalEntity> buscarTodos() {
-        return profissionalRepository.findAll();
+    public List<ProfissionalDtoOut> buscarTodos() {
+        return profissionalRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Busca um profissional pelo seu ID (que é o mesmo ID do usuário).
+     * Busca um profissional pelo seu ID e retorna DTO de saída.
      */
-    public Optional<ProfissionalEntity> buscarPorId(Long id) {
-        return profissionalRepository.findById(id);
+    public Optional<ProfissionalDtoOut> buscarPorId(Long id) {
+        return profissionalRepository.findById(id).map(this::toDto);
     }
 
     /**
-     * Atualiza os dados de um profissional/usuário.
+     * Atualiza os dados de um profissional via DTO In e retorna DTO Out.
      */
-    public ProfissionalEntity atualizar(Long id, ProfissionalEntity profissionalAtualizado) {
+    public ProfissionalDtoOut atualizar(Long id, ProfissionalDtoIn profissionalDto) {
         Optional<ProfissionalEntity> optionalProfissional = profissionalRepository.findById(id);
         if (optionalProfissional.isEmpty()) {
             throw new EntityNotFoundException("Profissional não encontrado com o ID: " + id);
         }
 
-        ProfissionalEntity profissionalExistente = optionalProfissional.get();
-        validarProfissional(profissionalAtualizado);
+        validarProfissionalDto(profissionalDto);
 
-        profissionalExistente.setNome(profissionalAtualizado.getNome());
-        profissionalExistente.setIdade(profissionalAtualizado.getIdade());
-        profissionalExistente.setEndereco(profissionalAtualizado.getEndereco());
-        profissionalExistente.setCertificados(profissionalAtualizado.getCertificados());
-        profissionalExistente.setExperiencia(profissionalAtualizado.getExperiencia());
+        ProfissionalEntity existente = optionalProfissional.get();
+        aplicarDtoNoEntity(existente, profissionalDto);
 
-        return profissionalRepository.save(profissionalExistente);
+        ProfissionalEntity atualizado = profissionalRepository.save(existente);
+        return toDto(atualizado);
     }
 
     /**
@@ -92,49 +95,97 @@ public class ProfissionalService {
     }
 
     /**
-     * Valida os campos obrigatórios e herdados do usuário.
+     * Busca profissionais experientes (>= 5 anos).
      */
-    private void validarProfissional(ProfissionalEntity profissional) {
-        if (profissional == null) {
-            throw new IllegalArgumentException("O objeto de profissional não pode ser nulo.");
-        }
-        if (profissional.getNome() == null || profissional.getNome().isBlank()) {
-            throw new IllegalArgumentException("O nome do profissional/usuário é obrigatório.");
-        }
-        if (profissional.getCertificados() == null || profissional.getCertificados().isBlank()) {
-            throw new IllegalArgumentException("Os certificados são obrigatórios.");
-        }
+    public List<ProfissionalDtoOut> buscarExperientes() {
+        return profissionalRepository.findProfissionaisExperientes()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Sobrecarga: atualizar aceitando só a entidade (compatível com o controller)
-    public ProfissionalEntity atualizar(ProfissionalEntity profissionalAtualizado) {
-        if (profissionalAtualizado == null || profissionalAtualizado.getId() == null) {
-            throw new IllegalArgumentException("O profissional para atualização deve ter um ID.");
-        }
-        return atualizar(profissionalAtualizado.getId(), profissionalAtualizado);
-    }
-
-    // Profissionais experientes (>= 5 anos)
-    public List<ProfissionalEntity> buscarExperientes() {
-        return profissionalRepository.findProfissionaisExperientes();
-    }
-
-    // Profissionais com experiência maior que X anos
-    public List<ProfissionalEntity> buscarComExperienciaMaiorQue(Integer anos) {
+    /**
+     * Busca profissionais com experiência maior que X anos.
+     */
+    public List<ProfissionalDtoOut> buscarComExperienciaMaiorQue(Integer anos) {
         if (anos == null || anos < 0) {
             throw new IllegalArgumentException("Os anos de experiência devem ser não negativos.");
         }
-        return profissionalRepository.findByExperienciaGreaterThan(anos);
+        return profissionalRepository.findByExperienciaGreaterThan(anos)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    // Profissionais qualificados por experiência mínima e idade mínima
-    public List<ProfissionalEntity> buscarQualificados(Integer experienciaMinima, Integer idadeMinima) {
+    /**
+     * Busca profissionais qualificados por experiência mínima e idade mínima.
+     */
+    public List<ProfissionalDtoOut> buscarQualificados(Integer experienciaMinima, Integer idadeMinima) {
         if (experienciaMinima == null || experienciaMinima < 0) {
             throw new IllegalArgumentException("A experiência mínima deve ser não negativa.");
         }
         if (idadeMinima == null || idadeMinima < 0) {
             throw new IllegalArgumentException("A idade mínima deve ser não negativa.");
         }
-        return profissionalRepository.findByExperienciaAndIdadeMinima(experienciaMinima, idadeMinima);
+        return profissionalRepository.findByExperienciaAndIdadeMinima(experienciaMinima, idadeMinima)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Conversor de Entidade -> DTO Out.
+     */
+    private ProfissionalDtoOut toDto(ProfissionalEntity entity) {
+        List<Long> chatIds = (entity.getChats() != null)
+                ? entity.getChats().stream().map(c -> c.getId()).collect(Collectors.toList())
+                : null;
+
+        List<Long> tratamentoIds = (entity.getTratamentos() != null)
+                ? entity.getTratamentos().stream().map(t -> t.getId()).collect(Collectors.toList())
+                : null;
+
+        ProfissionalDtoOut dto = new ProfissionalDtoOut();
+        dto.setId(entity.getId());
+        dto.setNome(entity.getNome());
+        dto.setIdade(entity.getIdade());
+        dto.setEndereco(entity.getEndereco());
+        dto.setCertificados(entity.getCertificados());
+        dto.setExperiencia(entity.getExperiencia());
+        dto.setChatIds(chatIds);
+        dto.setTratamentoIds(tratamentoIds);
+        return dto;
+    }
+
+    /**
+     * Aplica os campos do DTO In na entidade (create/update).
+     */
+    private void aplicarDtoNoEntity(ProfissionalEntity destino, ProfissionalDtoIn fonte) {
+        destino.setNome(fonte.getNome());
+        destino.setIdade(fonte.getIdade());
+        destino.setEndereco(fonte.getEndereco());
+        destino.setCertificados(fonte.getCertificados());
+        destino.setExperiencia(fonte.getExperiencia());
+    }
+
+    /**
+     * Validação do DTO de entrada.
+     */
+    private void validarProfissionalDto(ProfissionalDtoIn profissional) {
+        if (profissional == null) {
+            throw new IllegalArgumentException("O objeto de profissional não pode ser nulo.");
+        }
+        if (profissional.getNome() == null || profissional.getNome().isBlank()) {
+            throw new IllegalArgumentException("O nome do profissional é obrigatório.");
+        }
+        if (profissional.getCertificados() == null || profissional.getCertificados().isBlank()) {
+            throw new IllegalArgumentException("Os certificados são obrigatórios.");
+        }
+        if (profissional.getIdade() != null && profissional.getIdade() < 0) {
+            throw new IllegalArgumentException("A idade não pode ser negativa.");
+        }
+        if (profissional.getExperiencia() != null && profissional.getExperiencia() < 0) {
+            throw new IllegalArgumentException("A experiência não pode ser negativa.");
+        }
     }
 }
