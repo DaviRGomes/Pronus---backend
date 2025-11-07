@@ -32,9 +32,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: mvn test
+        run: mvn clean verify
 
-  package: 
+  build: 
 
     runs-on: ubuntu-latest
     needs: test
@@ -47,7 +47,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: mvn clean install package
+        run: mvn install package
     
 
 # - name: Update dependency graph
