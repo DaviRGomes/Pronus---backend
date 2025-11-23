@@ -25,6 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - TratamentoService
+ * Valida gestão de tratamentos e acompanhamento de pacientes
+ */
 @ExtendWith(MockitoExtension.class)
 class TratamentoServiceTest {
 
@@ -47,7 +51,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve criar tratamento com sucesso quando dados válidos")
         void deveCriarTratamentoComSucesso() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setConteudoTesteId(2L);
@@ -73,10 +76,8 @@ class TratamentoServiceTest {
             when(conteudoTesteRepository.findById(2L)).thenReturn(Optional.of(conteudoTeste));
             when(tratamentoRepository.save(any(TratamentoEntity.class))).thenReturn(tratamentoSalvo);
 
-            // Act
             TratamentoDtoOut resultado = tratamentoService.criar(tratamentoDto);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(10L);
             assertThat(resultado.getProfissionalId()).isEqualTo(1L);
@@ -90,7 +91,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve criar tratamento sem conteúdo de teste")
         void deveCriarTratamentoSemConteudoTeste() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setConteudoTesteId(null);
@@ -110,10 +110,8 @@ class TratamentoServiceTest {
             when(profissionalRepository.findById(1L)).thenReturn(Optional.of(profissional));
             when(tratamentoRepository.save(any(TratamentoEntity.class))).thenReturn(tratamentoSalvo);
 
-            // Act
             TratamentoDtoOut resultado = tratamentoService.criar(tratamentoDto);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getConteudoTesteId()).isNull();
             verify(tratamentoRepository, times(1)).save(any(TratamentoEntity.class));
@@ -122,7 +120,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando DTO é nulo")
         void deveLancarExcecao_QuandoDtoNulo() {
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nulo");
@@ -133,7 +130,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando profissional não existe")
         void deveLancarExcecao_QuandoProfissionalNaoExiste() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(999L);
             tratamentoDto.setTipoTratamento("Fonético");
@@ -141,7 +137,6 @@ class TratamentoServiceTest {
 
             when(profissionalRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("profissional")
@@ -153,7 +148,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando conteúdo de teste não existe")
         void deveLancarExcecao_QuandoConteudoTesteNaoExiste() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setConteudoTesteId(999L);
@@ -166,7 +160,6 @@ class TratamentoServiceTest {
             when(profissionalRepository.findById(1L)).thenReturn(Optional.of(profissional));
             when(conteudoTesteRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Conteúdo de teste")
@@ -178,13 +171,11 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando profissionalId é nulo")
         void deveLancarExcecao_QuandoProfissionalIdNulo() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(null);
             tratamentoDto.setTipoTratamento("Fonético");
             tratamentoDto.setQuantidadeDia(3);
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("profissional");
@@ -195,13 +186,11 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando tipo de tratamento está em branco")
         void deveLancarExcecao_QuandoTipoTratamentoEstaBranco() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setTipoTratamento("   ");
             tratamentoDto.setQuantidadeDia(3);
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("tipo de tratamento");
@@ -212,13 +201,11 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando quantidade de dias é zero")
         void deveLancarExcecao_QuandoQuantidadeDiaZero() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setTipoTratamento("Fonético");
             tratamentoDto.setQuantidadeDia(0);
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("quantidade de dias");
@@ -229,13 +216,11 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando quantidade de dias é negativa")
         void deveLancarExcecao_QuandoQuantidadeDiaNegativa() {
-            // Arrange
             TratamentoDtoIn tratamentoDto = new TratamentoDtoIn();
             tratamentoDto.setProfissionalId(1L);
             tratamentoDto.setTipoTratamento("Fonético");
             tratamentoDto.setQuantidadeDia(-5);
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.criar(tratamentoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("quantidade de dias");
@@ -251,7 +236,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve buscar todos os tratamentos com sucesso")
         void deveBuscarTodosOsTratamentos() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -267,10 +251,8 @@ class TratamentoServiceTest {
 
             when(tratamentoRepository.findAll()).thenReturn(Arrays.asList(tratamento1, tratamento2));
 
-            // Act
             List<TratamentoDtoOut> resultados = tratamentoService.buscarTodos();
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados.get(0).getTipoTratamento()).isEqualTo("Fonético");
             assertThat(resultados.get(1).getTipoTratamento()).isEqualTo("Respiração");
@@ -280,7 +262,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve buscar tratamento por ID com sucesso")
         void deveBuscarTratamentoPorId() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -292,10 +273,8 @@ class TratamentoServiceTest {
 
             when(tratamentoRepository.findById(10L)).thenReturn(Optional.of(tratamento));
 
-            // Act
             Optional<TratamentoDtoOut> resultado = tratamentoService.buscarPorId(10L);
 
-            // Assert
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getId()).isEqualTo(10L);
             assertThat(resultado.get().getTipoTratamento()).isEqualTo("Fonético");
@@ -305,13 +284,10 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve retornar vazio quando tratamento não existe")
         void deveRetornarVazio_QuandoTratamentoNaoExiste() {
-            // Arrange
             when(tratamentoRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act
             Optional<TratamentoDtoOut> resultado = tratamentoService.buscarPorId(999L);
 
-            // Assert
             assertThat(resultado).isEmpty();
             verify(tratamentoRepository, times(1)).findById(999L);
         }
@@ -319,7 +295,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve buscar tratamentos por profissional ID")
         void deveBuscarTratamentosPorProfissionalId() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -333,10 +308,8 @@ class TratamentoServiceTest {
 
             when(tratamentoRepository.findByProfissionalId(1L)).thenReturn(Arrays.asList(tratamento1, tratamento2));
 
-            // Act
             List<TratamentoDtoOut> resultados = tratamentoService.buscarPorProfissionalId(1L);
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados).allMatch(t -> t.getProfissionalId().equals(1L));
             verify(tratamentoRepository, times(1)).findByProfissionalId(1L);
@@ -350,7 +323,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve atualizar tratamento com sucesso")
         void deveAtualizarTratamentoComSucesso() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -374,10 +346,8 @@ class TratamentoServiceTest {
             when(tratamentoRepository.findById(10L)).thenReturn(Optional.of(tratamentoExistente));
             when(tratamentoRepository.save(any(TratamentoEntity.class))).thenReturn(tratamentoAtualizado);
 
-            // Act
             TratamentoDtoOut resultado = tratamentoService.atualizar(10L, dadosAtualizados);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(10L);
             assertThat(resultado.getTipoTratamento()).isEqualTo("Atualizado");
@@ -388,7 +358,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao atualizar tratamento inexistente")
         void deveLancarExcecao_QuandoAtualizarTratamentoInexistente() {
-            // Arrange
             TratamentoDtoIn dadosAtualizados = new TratamentoDtoIn();
             dadosAtualizados.setProfissionalId(1L);
             dadosAtualizados.setTipoTratamento("Novo");
@@ -396,7 +365,6 @@ class TratamentoServiceTest {
 
             when(tratamentoRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.atualizar(999L, dadosAtualizados))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -412,23 +380,18 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve deletar tratamento com sucesso")
         void deveDeletarTratamentoComSucesso() {
-            // Arrange
             when(tratamentoRepository.existsById(10L)).thenReturn(true);
 
-            // Act
             tratamentoService.deletar(10L);
 
-            // Assert
             verify(tratamentoRepository, times(1)).deleteById(10L);
         }
 
         @Test
         @DisplayName("Deve lançar exceção ao deletar tratamento inexistente")
         void deveLancarExcecao_QuandoDeletarTratamentoInexistente() {
-            // Arrange
             when(tratamentoRepository.existsById(999L)).thenReturn(false);
 
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -444,7 +407,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve buscar tratamentos por tipo")
         void deveBuscarTratamentosPorTipo() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -461,10 +423,8 @@ class TratamentoServiceTest {
             when(tratamentoRepository.findByTipoTratamentoIgnoreCase("Fonético"))
                 .thenReturn(Arrays.asList(tratamento1, tratamento2));
 
-            // Act
             List<TratamentoDtoOut> resultados = tratamentoService.buscarPorTipo("Fonético");
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados).allMatch(t -> t.getTipoTratamento().equals("Fonético"));
             verify(tratamentoRepository, times(1)).findByTipoTratamentoIgnoreCase("Fonético");
@@ -473,7 +433,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando tipo está em branco")
         void deveLancarExcecao_QuandoTipoEstaBranco() {
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.buscarPorTipo("   "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("tipo de tratamento");
@@ -484,7 +443,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve buscar tratamentos por tipo e quantidade mínima")
         void deveBuscarTratamentosPorTipoEQuantidadeMinima() {
-            // Arrange
             ProfissionalEntity profissional = new ProfissionalEntity();
             profissional.setId(1L);
 
@@ -497,10 +455,8 @@ class TratamentoServiceTest {
             when(tratamentoRepository.findByTipoTratamentoAndQuantidadeDiaGreaterThanEqual("Fonético", 5))
                 .thenReturn(Arrays.asList(tratamento1));
 
-            // Act
             List<TratamentoDtoOut> resultados = tratamentoService.buscarPorTipoEQuantidadeMinima("Fonético", 5);
 
-            // Assert
             assertThat(resultados).hasSize(1);
             assertThat(resultados.get(0).getQuantidadeDia()).isGreaterThanOrEqualTo(5);
             verify(tratamentoRepository, times(1))
@@ -510,7 +466,6 @@ class TratamentoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando quantidade mínima é negativa")
         void deveLancarExcecao_QuandoQuantidadeMinimaInvalida() {
-            // Act & Assert
             assertThatThrownBy(() -> tratamentoService.buscarPorTipoEQuantidadeMinima("Fonético", -1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("quantidade mínima");

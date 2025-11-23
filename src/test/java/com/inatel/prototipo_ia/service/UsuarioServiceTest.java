@@ -23,6 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - UsuarioService
+ *
+ * UsuarioEntity é a classe base para Cliente e Profissional
+ * Valida lógica de conversão e manipulação de usuários genéricos
+ */
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
@@ -167,7 +173,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve buscar usuários por nome")
         void deveBuscarUsuariosPorNome() {
-            // Arrange
             UsuarioEntity user1 = new UsuarioEntity();
             user1.setId(1L);
             user1.setNome("João Silva");
@@ -185,7 +190,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve buscar usuários por idade")
         void deveBuscarUsuariosPorIdade() {
-            // Arrange
             UsuarioEntity user1 = new UsuarioEntity();
             user1.setId(1L);
             user1.setNome("João");
@@ -218,7 +222,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve atualizar usuário com sucesso")
         void deveAtualizarUsuarioComSucesso() {
-            // Arrange
             UsuarioEntity usuarioExistente = new UsuarioEntity();
             usuarioExistente.setId(1L);
             usuarioExistente.setNome("Nome Antigo");
@@ -247,7 +250,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao atualizar usuário inexistente")
         void deveLancarExcecao_QuandoAtualizarUsuarioInexistente() {
-            // Arrange
             UsuarioDtoIn dadosAtualizados = new UsuarioDtoIn();
             dadosAtualizados.setNome("Novo Nome");
 
@@ -268,7 +270,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve deletar usuário com sucesso quando não está associado")
         void deveDeletarUsuarioComSucesso() {
-            // Arrange
             when(usuarioRepository.existsById(10L)).thenReturn(true);
             when(clienteRepository.existsById(10L)).thenReturn(false);
             when(profissionalRepository.existsById(10L)).thenReturn(false);
@@ -281,7 +282,6 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao deletar usuário inexistente")
         void deveLancarExcecao_QuandoDeletarUsuarioInexistente() {
-            // Arrange
             when(usuarioRepository.existsById(999L)).thenReturn(false);
 
             assertThatThrownBy(() -> usuarioService.deletar(999L))

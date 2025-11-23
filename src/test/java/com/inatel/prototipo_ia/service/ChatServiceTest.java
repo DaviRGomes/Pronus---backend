@@ -25,6 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - ChatService
+ *
+ * Chat envolve relacionamentos com Cliente e Profissional
+ * Validando lógica sem banco real (usando Mockito)
+ */
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
 
@@ -53,6 +59,7 @@ class ChatServiceTest {
             chatDto.setDuracao(30);
             chatDto.setConversa("Conversa sobre pronúncia");
 
+            // Setup das entidades relacionadas
             ClienteEntity cliente = new ClienteEntity();
             cliente.setId(1L);
             cliente.setNome("João");
@@ -68,6 +75,7 @@ class ChatServiceTest {
             chatSalvo.setDuracao(30);
             chatSalvo.setConversa("Conversa sobre pronúncia");
 
+            // Mockando busca de cliente e profissional
             when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
             when(profissionalRepository.findById(2L)).thenReturn(Optional.of(profissional));
             when(chatRepository.save(any(ChatEntity.class))).thenReturn(chatSalvo);
@@ -101,6 +109,7 @@ class ChatServiceTest {
             chatDto.setClienteId(999L);
             chatDto.setProfissionalId(2L);
 
+            // Simulando cliente inexistente
             when(clienteRepository.findById(999L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> chatService.criar(chatDto))
@@ -108,6 +117,7 @@ class ChatServiceTest {
                 .hasMessageContaining("Cliente")
                 .hasMessageContaining("999");
 
+            // Nunca deve tentar salvar se cliente não existe
             verify(chatRepository, never()).save(any());
         }
 

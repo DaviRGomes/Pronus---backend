@@ -24,6 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - CertificadoService
+ * Valida emissão e gerenciamento de certificados profissionais
+ */
 @ExtendWith(MockitoExtension.class)
 class CertificadoServiceTest {
 
@@ -77,7 +81,6 @@ class CertificadoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando DTO é nulo")
         void deveLancarExcecao_QuandoDtoNulo() {
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nulo");
@@ -96,7 +99,6 @@ class CertificadoServiceTest {
 
             when(clienteRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(certificadoDto))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("cliente")
@@ -114,7 +116,6 @@ class CertificadoServiceTest {
             certificadoDto.setDataEmissao(LocalDate.now());
             certificadoDto.setNivelAlcancado("Básico");
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(certificadoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cliente");
@@ -131,7 +132,6 @@ class CertificadoServiceTest {
             certificadoDto.setDataEmissao(LocalDate.now());
             certificadoDto.setNivelAlcancado("Básico");
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(certificadoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nome");
@@ -148,7 +148,6 @@ class CertificadoServiceTest {
             certificadoDto.setDataEmissao(null);
             certificadoDto.setNivelAlcancado("Básico");
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(certificadoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("data de emissão");
@@ -165,7 +164,6 @@ class CertificadoServiceTest {
             certificadoDto.setDataEmissao(LocalDate.now());
             certificadoDto.setNivelAlcancado("   ");
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.criar(certificadoDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nível alcançado");
@@ -278,7 +276,6 @@ class CertificadoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando nível está em branco na busca")
         void deveLancarExcecao_QuandoNivelEstaBrancoNaBusca() {
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.buscarPorNivel("   "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nível alcançado");
@@ -310,7 +307,6 @@ class CertificadoServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando data é nula na busca")
         void deveLancarExcecao_QuandoDataNulaNaBusca() {
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.buscarPorDataEmissaoApos(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("data");
@@ -369,7 +365,6 @@ class CertificadoServiceTest {
 
             when(certificadoRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.atualizar(999L, dadosAtualizados))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -397,7 +392,6 @@ class CertificadoServiceTest {
         void deveLancarExcecao_QuandoDeletarCertificadoInexistente() {
             when(certificadoRepository.existsById(999L)).thenReturn(false);
 
-            // Act & Assert
             assertThatThrownBy(() -> certificadoService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");

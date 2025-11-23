@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - EspecialistaService
+ * Valida gestão de especialistas médicos e agendamento de consultas
+ */
 @ExtendWith(MockitoExtension.class)
 class EspecialistaServiceTest {
 
@@ -45,7 +49,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve criar especialista com sucesso quando dados válidos")
         void deveCriarEspecialistaComSucesso() {
-            // Arrange
             EspecialistaDtoIn especialistaDto = new EspecialistaDtoIn();
             especialistaDto.setNome("Dr. Carlos Silva");
             especialistaDto.setIdade(40);
@@ -63,10 +66,8 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.save(any(EspecialistaEntity.class))).thenReturn(especialistaSalvo);
 
-            // Act
             EspecialistaDtoOut resultado = especialistaService.criar(especialistaDto);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(1L);
             assertThat(resultado.getNome()).isEqualTo("Dr. Carlos Silva");
@@ -79,7 +80,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando DTO é nulo")
         void deveLancarExcecao_QuandoDtoNulo() {
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.criar(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nulo");
@@ -90,13 +90,11 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando nome está em branco")
         void deveLancarExcecao_QuandoNomeEstaBranco() {
-            // Arrange
             EspecialistaDtoIn especialistaDto = new EspecialistaDtoIn();
             especialistaDto.setNome("   ");
             especialistaDto.setCrmFono("CRM 123");
             especialistaDto.setEspecialidade("Fonoaudiologia");
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.criar(especialistaDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nome");
@@ -107,13 +105,11 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando CRM/CRFA está em branco")
         void deveLancarExcecao_QuandoCrmFonoEstaBranco() {
-            // Arrange
             EspecialistaDtoIn especialistaDto = new EspecialistaDtoIn();
             especialistaDto.setNome("Dr. Silva");
             especialistaDto.setCrmFono("   ");
             especialistaDto.setEspecialidade("Fonoaudiologia");
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.criar(especialistaDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("CRM/CRFA");
@@ -124,13 +120,11 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando especialidade está em branco")
         void deveLancarExcecao_QuandoEspecialidadeEstaBranco() {
-            // Arrange
             EspecialistaDtoIn especialistaDto = new EspecialistaDtoIn();
             especialistaDto.setNome("Dr. Silva");
             especialistaDto.setCrmFono("CRM 123");
             especialistaDto.setEspecialidade("   ");
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.criar(especialistaDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("especialidade");
@@ -141,14 +135,12 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando idade é negativa")
         void deveLancarExcecao_QuandoIdadeNegativa() {
-            // Arrange
             EspecialistaDtoIn especialistaDto = new EspecialistaDtoIn();
             especialistaDto.setNome("Dr. Silva");
             especialistaDto.setCrmFono("CRM 123");
             especialistaDto.setEspecialidade("Fonoaudiologia");
             especialistaDto.setIdade(-5);
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.criar(especialistaDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("idade");
@@ -164,7 +156,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve buscar todos os especialistas com sucesso")
         void deveBuscarTodosOsEspecialistas() {
-            // Arrange
             EspecialistaEntity esp1 = new EspecialistaEntity();
             esp1.setId(1L);
             esp1.setNome("Dr. Silva");
@@ -177,10 +168,8 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.findAll()).thenReturn(Arrays.asList(esp1, esp2));
 
-            // Act
             List<EspecialistaDtoOut> resultados = especialistaService.buscarTodos();
 
-            // Assert
             assertThat(resultados).hasSize(2);
             assertThat(resultados.get(0).getNome()).isEqualTo("Dr. Silva");
             assertThat(resultados.get(1).getNome()).isEqualTo("Dra. Santos");
@@ -190,7 +179,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve buscar especialista por ID com sucesso")
         void deveBuscarEspecialistaPorId() {
-            // Arrange
             EspecialistaEntity especialista = new EspecialistaEntity();
             especialista.setId(10L);
             especialista.setNome("Dr. João");
@@ -198,10 +186,8 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.findById(10L)).thenReturn(Optional.of(especialista));
 
-            // Act
             Optional<EspecialistaDtoOut> resultado = especialistaService.buscarPorId(10L);
 
-            // Assert
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getId()).isEqualTo(10L);
             assertThat(resultado.get().getNome()).isEqualTo("Dr. João");
@@ -211,13 +197,10 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve retornar vazio quando especialista não existe")
         void deveRetornarVazio_QuandoEspecialistaNaoExiste() {
-            // Arrange
             when(especialistaRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act
             Optional<EspecialistaDtoOut> resultado = especialistaService.buscarPorId(999L);
 
-            // Assert
             assertThat(resultado).isEmpty();
             verify(especialistaRepository, times(1)).findById(999L);
         }
@@ -225,7 +208,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve buscar especialistas por especialidade")
         void deveBuscarEspecialistasPorEspecialidade() {
-            // Arrange
             EspecialistaEntity esp1 = new EspecialistaEntity();
             esp1.setId(1L);
             esp1.setNome("Dr. Silva");
@@ -234,10 +216,8 @@ class EspecialistaServiceTest {
             when(especialistaRepository.findByEspecialidade("Fonoaudiologia"))
                 .thenReturn(Arrays.asList(esp1));
 
-            // Act
             List<EspecialistaDtoOut> resultados = especialistaService.buscarPorEspecialidade("Fonoaudiologia");
 
-            // Assert
             assertThat(resultados).hasSize(1);
             assertThat(resultados.get(0).getEspecialidade()).isEqualTo("Fonoaudiologia");
             verify(especialistaRepository, times(1)).findByEspecialidade("Fonoaudiologia");
@@ -246,7 +226,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando especialidade está em branco na busca")
         void deveLancarExcecao_QuandoEspecialidadeEstaBrancoNaBusca() {
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.buscarPorEspecialidade("   "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("especialidade");
@@ -257,7 +236,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve buscar especialista por CRM/CRFA")
         void deveBuscarEspecialistaPorCrmFono() {
-            // Arrange
             EspecialistaEntity especialista = new EspecialistaEntity();
             especialista.setId(1L);
             especialista.setNome("Dr. Silva");
@@ -265,10 +243,8 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.findByCrmFono("CRM 12345")).thenReturn(Optional.of(especialista));
 
-            // Act
             Optional<EspecialistaDtoOut> resultado = especialistaService.buscarPorCrmFono("CRM 12345");
 
-            // Assert
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getCrmFono()).isEqualTo("CRM 12345");
             verify(especialistaRepository, times(1)).findByCrmFono("CRM 12345");
@@ -277,7 +253,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve buscar especialistas maiores de idade")
         void deveBuscarEspecialistasMaioresDeIdade() {
-            // Arrange
             EspecialistaEntity esp1 = new EspecialistaEntity();
             esp1.setId(1L);
             esp1.setNome("Dr. Silva");
@@ -285,10 +260,8 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.findEspecialistasMaioresDeIdade()).thenReturn(Arrays.asList(esp1));
 
-            // Act
             List<EspecialistaDtoOut> resultados = especialistaService.buscarMaioresDeIdade();
 
-            // Assert
             assertThat(resultados).hasSize(1);
             assertThat(resultados.get(0).getIdade()).isGreaterThanOrEqualTo(18);
             verify(especialistaRepository, times(1)).findEspecialistasMaioresDeIdade();
@@ -302,7 +275,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve atualizar especialista com sucesso")
         void deveAtualizarEspecialistaComSucesso() {
-            // Arrange
             EspecialistaEntity especialistaExistente = new EspecialistaEntity();
             especialistaExistente.setId(1L);
             especialistaExistente.setNome("Dr. Antigo");
@@ -321,10 +293,8 @@ class EspecialistaServiceTest {
             when(especialistaRepository.findById(1L)).thenReturn(Optional.of(especialistaExistente));
             when(especialistaRepository.save(any(EspecialistaEntity.class))).thenReturn(especialistaAtualizado);
 
-            // Act
             EspecialistaDtoOut resultado = especialistaService.atualizar(1L, dadosAtualizados);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getNome()).isEqualTo("Dr. Atualizado");
             assertThat(resultado.getEspecialidade()).isEqualTo("Fonoaudiologia");
@@ -334,7 +304,6 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao atualizar especialista inexistente")
         void deveLancarExcecao_QuandoAtualizarEspecialistaInexistente() {
-            // Arrange
             EspecialistaDtoIn dadosAtualizados = new EspecialistaDtoIn();
             dadosAtualizados.setNome("Novo Nome");
             dadosAtualizados.setCrmFono("CRM 123");
@@ -342,7 +311,6 @@ class EspecialistaServiceTest {
 
             when(especialistaRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.atualizar(999L, dadosAtualizados))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -358,25 +326,20 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve deletar especialista com sucesso quando não está em uso")
         void deveDeletarEspecialistaComSucesso() {
-            // Arrange
             when(especialistaRepository.existsById(10L)).thenReturn(true);
             when(consultaRepository.existsByEspecialistaId(10L)).thenReturn(false);
             when(disponibilidadeRepository.existsByEspecialistaId(10L)).thenReturn(false);
 
-            // Act
             especialistaService.deletar(10L);
 
-            // Assert
             verify(especialistaRepository, times(1)).deleteById(10L);
         }
 
         @Test
         @DisplayName("Deve lançar exceção ao deletar especialista inexistente")
         void deveLancarExcecao_QuandoDeletarEspecialistaInexistente() {
-            // Arrange
             when(especialistaRepository.existsById(999L)).thenReturn(false);
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -387,11 +350,9 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao deletar especialista vinculado a consulta")
         void deveLancarExcecao_QuandoDeletarEspecialistaVinculadoAConsulta() {
-            // Arrange
             when(especialistaRepository.existsById(5L)).thenReturn(true);
             when(consultaRepository.existsByEspecialistaId(5L)).thenReturn(true);
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.deletar(5L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("consultas");
@@ -402,12 +363,10 @@ class EspecialistaServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao deletar especialista vinculado a disponibilidade")
         void deveLancarExcecao_QuandoDeletarEspecialistaVinculadoADisponibilidade() {
-            // Arrange
             when(especialistaRepository.existsById(5L)).thenReturn(true);
             when(consultaRepository.existsByEspecialistaId(5L)).thenReturn(false);
             when(disponibilidadeRepository.existsByEspecialistaId(5L)).thenReturn(true);
 
-            // Act & Assert
             assertThatThrownBy(() -> especialistaService.deletar(5L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("disponibilidades");

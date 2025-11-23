@@ -7,14 +7,12 @@ import com.inatel.prototipo_ia.entity.RelatorioEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.RelatorioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,7 +43,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve criar relatório com sucesso quando dados válidos")
         void deveCriarRelatorioComSucesso() {
-            // Arrange - Dados válidos
+
             RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
             relatorioDto.setChatId(1L);
             relatorioDto.setAnaliseFono("Paciente apresenta dificuldade em falar R");
@@ -64,10 +62,8 @@ class RelatorioServiceTest {
             when(relatorioRepository.existsByChatId(1L)).thenReturn(false);
             when(relatorioRepository.save(any(RelatorioEntity.class))).thenReturn(relatorioSalvo);
 
-            // Act
             RelatorioDtoOut resultado = relatorioService.criar(relatorioDto);
 
-            // Assert
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(100L);
             assertThat(resultado.getAcuracia()).isEqualTo(0.85f);
@@ -81,13 +77,13 @@ class RelatorioServiceTest {
         @ValueSource(floats = {-0.1f, 1.1f, 2.0f, -1.0f, 1.5f})
         @DisplayName("Deve lançar exceção ao criar relatório com acurácia inválida")
         void deveLancarExcecao_QuandoAcuraciaForInvalida(float acuraciaInvalida) {
-            // Arrange
+            
             RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
             relatorioDto.setChatId(1L);
             relatorioDto.setAnaliseFono("Análise de teste");
             relatorioDto.setAcuracia(acuraciaInvalida);
 
-            // Act & Assert
+            
             assertThatThrownBy(() -> relatorioService.criar(relatorioDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("acurácia");
@@ -98,7 +94,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando chat não existe")
         void deveLancarExcecao_QuandoChatNaoExiste() {
-            // Arrange
+    
             RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
             relatorioDto.setChatId(999L);
             relatorioDto.setAnaliseFono("Análise válida");
@@ -106,7 +102,6 @@ class RelatorioServiceTest {
 
             when(chatRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> relatorioService.criar(relatorioDto))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("chat")
@@ -118,7 +113,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando chat já possui relatório")
         void deveLancarExcecao_QuandoChatJaPossuiRelatorio() {
-            // Arrange
+            
             RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
             relatorioDto.setChatId(1L);
             relatorioDto.setAnaliseFono("Análise válida");
@@ -130,7 +125,7 @@ class RelatorioServiceTest {
             when(chatRepository.findById(1L)).thenReturn(Optional.of(chatExistente));
             when(relatorioRepository.existsByChatId(1L)).thenReturn(true);
 
-            // Act & Assert
+            
             assertThatThrownBy(() -> relatorioService.criar(relatorioDto))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("já possui um relatório");
@@ -141,13 +136,13 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando análise fonoaudiológica está em branco")
         void deveLancarExcecao_QuandoAnaliseFonoEstaBranco() {
-            // Arrange
+            
             RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
             relatorioDto.setChatId(1L);
             relatorioDto.setAnaliseFono("   ");
             relatorioDto.setAcuracia(0.9f);
 
-            // Act & Assert
+            
             assertThatThrownBy(() -> relatorioService.criar(relatorioDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("análise");
@@ -163,7 +158,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve buscar todos os relatórios com sucesso")
         void deveBuscarTodosOsRelatorios() {
-            // Arrange
+            
             ChatEntity chat1 = new ChatEntity();
             chat1.setId(1L);
 
@@ -184,10 +179,10 @@ class RelatorioServiceTest {
 
             when(relatorioRepository.findAll()).thenReturn(Arrays.asList(relatorio1, relatorio2));
 
-            // Act
+            
             List<RelatorioDtoOut> resultados = relatorioService.buscarTodos();
 
-            // Assert
+        
             assertThat(resultados).hasSize(2);
             assertThat(resultados.get(0).getId()).isEqualTo(1L);
             assertThat(resultados.get(1).getId()).isEqualTo(2L);
@@ -197,7 +192,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve buscar relatório por ID com sucesso")
         void deveBuscarRelatorioPorId() {
-            // Arrange
+            
             ChatEntity chat = new ChatEntity();
             chat.setId(1L);
 
@@ -209,10 +204,10 @@ class RelatorioServiceTest {
 
             when(relatorioRepository.findById(10L)).thenReturn(Optional.of(relatorio));
 
-            // Act
+            
             Optional<RelatorioDtoOut> resultado = relatorioService.buscarPorId(10L);
 
-            // Assert
+        
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getId()).isEqualTo(10L);
             assertThat(resultado.get().getAcuracia()).isEqualTo(0.85f);
@@ -222,13 +217,13 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve retornar vazio quando relatório não existe")
         void deveRetornarVazio_QuandoRelatorioNaoExiste() {
-            // Arrange
+            
             when(relatorioRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act
+            
             Optional<RelatorioDtoOut> resultado = relatorioService.buscarPorId(999L);
 
-            // Assert
+        
             assertThat(resultado).isEmpty();
             verify(relatorioRepository, times(1)).findById(999L);
         }
@@ -236,7 +231,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve buscar relatório por chat ID com sucesso")
         void deveBuscarRelatorioPorChatId() {
-            // Arrange
+            
             ChatEntity chat = new ChatEntity();
             chat.setId(5L);
 
@@ -248,10 +243,10 @@ class RelatorioServiceTest {
 
             when(relatorioRepository.findByChatId(5L)).thenReturn(Optional.of(relatorio));
 
-            // Act
+            
             Optional<RelatorioDtoOut> resultado = relatorioService.buscarPorChatId(5L);
 
-            // Assert
+        
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getChatId()).isEqualTo(5L);
             assertThat(resultado.get().getId()).isEqualTo(20L);
@@ -266,7 +261,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve atualizar relatório com sucesso")
         void deveAtualizarRelatorioComSucesso() {
-            // Arrange
+            
             ChatEntity chat = new ChatEntity();
             chat.setId(1L);
 
@@ -290,10 +285,10 @@ class RelatorioServiceTest {
             when(relatorioRepository.findById(10L)).thenReturn(Optional.of(relatorioExistente));
             when(relatorioRepository.save(any(RelatorioEntity.class))).thenReturn(relatorioAtualizado);
 
-            // Act
+            
             RelatorioDtoOut resultado = relatorioService.atualizar(10L, dadosAtualizados);
 
-            // Assert
+        
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(10L);
             assertThat(resultado.getAcuracia()).isEqualTo(0.95f);
@@ -304,7 +299,7 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve lançar exceção ao atualizar relatório inexistente")
         void deveLancarExcecao_QuandoAtualizarRelatorioInexistente() {
-            // Arrange
+            
             RelatorioDtoIn dadosAtualizados = new RelatorioDtoIn();
             dadosAtualizados.setChatId(1L);
             dadosAtualizados.setAcuracia(0.95f);
@@ -312,7 +307,7 @@ class RelatorioServiceTest {
 
             when(relatorioRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
+            
             assertThatThrownBy(() -> relatorioService.atualizar(999L, dadosAtualizados))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -328,23 +323,23 @@ class RelatorioServiceTest {
         @Test
         @DisplayName("Deve deletar relatório com sucesso")
         void deveDeletarRelatorioComSucesso() {
-            // Arrange
+            
             when(relatorioRepository.existsById(10L)).thenReturn(true);
 
-            // Act
+            
             relatorioService.deletar(10L);
 
-            // Assert
+        
             verify(relatorioRepository, times(1)).deleteById(10L);
         }
 
         @Test
         @DisplayName("Deve lançar exceção ao deletar relatório inexistente")
         void deveLancarExcecao_QuandoDeletarRelatorioInexistente() {
-            // Arrange
+            
             when(relatorioRepository.existsById(999L)).thenReturn(false);
 
-            // Act & Assert
+            
             assertThatThrownBy(() -> relatorioService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");

@@ -6,12 +6,10 @@ import com.inatel.prototipo_ia.entity.ClienteEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ClienteRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -77,7 +75,6 @@ class ClienteServiceTest {
             clienteDto.setNome("   ");
             clienteDto.setIdade(25);
 
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.salvar(clienteDto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nome");
@@ -88,7 +85,7 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando DTO é nulo")
         void deveLancarExcecao_QuandoDtoNulo() {
-            // Act & Assert
+  
             assertThatThrownBy(() -> clienteService.salvar(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nulo");
@@ -205,7 +202,6 @@ class ClienteServiceTest {
 
             when(clienteRepository.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.atualizar(999L, dadosAtualizados))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -234,7 +230,6 @@ class ClienteServiceTest {
         void deveLancarExcecao_QuandoDeletarClienteInexistente() {
             when(clienteRepository.existsById(999L)).thenReturn(false);
 
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("999");
@@ -248,7 +243,6 @@ class ClienteServiceTest {
             when(clienteRepository.existsById(5L)).thenReturn(true);
             when(chatRepository.existsByClienteId(5L)).thenReturn(true);
 
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.deletar(5L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("chat");
@@ -309,7 +303,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando nível está em branco")
         void deveLancarExcecao_QuandoNivelEstaBranco() {
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.buscarPorNivel("   "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nível");
@@ -320,7 +313,6 @@ class ClienteServiceTest {
         @Test
         @DisplayName("Deve lançar exceção quando nível é nulo")
         void deveLancarExcecao_QuandoNivelNulo() {
-            // Act & Assert
             assertThatThrownBy(() -> clienteService.buscarPorNivel(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("nível");

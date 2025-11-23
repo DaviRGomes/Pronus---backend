@@ -27,6 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes Unitários - ConsultaService
+ *
+ * Consulta relaciona Cliente + Especialista (duplo relacionamento)
+ * Testes validam lógica de agendamento, status, e queries por data
+ */
 @ExtendWith(MockitoExtension.class)
 class ConsultaServiceTest {
 
