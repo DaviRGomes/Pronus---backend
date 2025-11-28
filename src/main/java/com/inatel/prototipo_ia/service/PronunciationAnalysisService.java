@@ -37,16 +37,16 @@ public class PronunciationAnalysisService {
 
     public BatchPronunciationAnalysisDTO analisarPronunciaEmLote(byte[] audioBytes, List<String> palavrasEsperadas) {
         try {
+            // 1. Transcrição (Agora com menos viés)
             String transcricaoCompleta = transcreverAudio(audioBytes, palavrasEsperadas);
-            System.out.println("Transcrição Otimizada: " + transcricaoCompleta);
+            System.out.println("📝 Transcrição IA (O que ela ouviu): " + transcricaoCompleta);
 
-        
+            // 2. Normalização
             List<String> palavrasTranscritas = Arrays.stream(transcricaoCompleta.split("\\s+"))
                     .map(this::normalizarTexto)
                     .filter(p -> !p.isEmpty())
                     .collect(Collectors.toList());
 
-            
             List<BatchPronunciationAnalysisDTO.ResultadoPalavra> resultados = new ArrayList<>();
             int acertos = 0;
             double somaSimilaridades = 0.0;
@@ -60,12 +60,18 @@ public class PronunciationAnalysisService {
                 double melhorScore = 0.0;
                 int indiceMelhorMatch = -1;
 
-            
+                // Busca a melhor correspondência na frase falada
                 for (int i = 0; i < palavrasTranscritas.size(); i++) {
                     if (palavrasUsadas[i]) continue;
 
                     String pTranscrita = palavrasTranscritas.get(i);
-                    double score = calcularSimilaridade(pEsperadaNorm, pTranscrita);
+                    
+                    // Agora usamos comparação direta e fonética leve
+                    double scoreOrtografico = calcularSimilaridade(pEsperadaNorm, pTranscrita);
+                    double scoreFonetico = calcularSimilaridade(fonetizarTexto(pEsperadaNorm), fonetizarTexto(pTranscrita));
+                    
+                    // Pega o melhor dos dois mundos, mas sem exagerar
+                    double score = Math.max(scoreOrtografico, scoreFonetico);
 
                     if (score > melhorScore) {
                         melhorScore = score;
@@ -74,28 +80,36 @@ public class PronunciationAnalysisService {
                     }
                 }
 
-                
+                System.out.printf("🔍 '%s' vs '%s' -> Score: %.2f%%%n", 
+                        palavraEsperada, melhorPalavraEncontrada, melhorScore * 100);
+
+                // --- CRITÉRIOS MAIS RIGOROSOS ---
+                // Só marca como usada se tiver certeza (score alto)
                 if (indiceMelhorMatch != -1 && melhorScore >= 0.6) {
                     palavrasUsadas[indiceMelhorMatch] = true;
                 }
 
-                boolean acertou = melhorScore >= 0.6; 
-                if (acertou) acertos++;
-                somaSimilaridades += melhorScore;
+                // Nota final sem arredondamento bonzinho
+                double scoreFinal = melhorScore * 100;
 
-                String feedback = gerarFeedbackPalavra(melhorScore, palavraEsperada, melhorPalavraEncontrada);
+                // Régua de aprovação: precisa de 80% para "Acertou"
+                boolean acertou = scoreFinal >= 80.0;
+                
+                if (acertou) acertos++;
+                somaSimilaridades += scoreFinal;
+
+                String feedback = gerarFeedbackPalavra(scoreFinal, palavraEsperada, melhorPalavraEncontrada);
 
                 resultados.add(new BatchPronunciationAnalysisDTO.ResultadoPalavra(
                         palavraEsperada,
-                        melhorPalavraEncontrada.isEmpty() ? "(não detectada)" : melhorPalavraEncontrada,
+                        melhorPalavraEncontrada.isEmpty() ? "(não identifiquei)" : melhorPalavraEncontrada,
                         acertou,
-                        melhorScore * 100,
+                        scoreFinal,
                         feedback
                 ));
             }
 
-            
-            double pontuacaoGeral = palavrasEsperadas.isEmpty() ? 0.0 : (somaSimilaridades / palavrasEsperadas.size()) * 100;
+            double pontuacaoGeral = palavrasEsperadas.isEmpty() ? 0.0 : (somaSimilaridades / palavrasEsperadas.size());
             double porcentagemAcerto = palavrasEsperadas.isEmpty() ? 0.0 : ((double) acertos / palavrasEsperadas.size()) * 100;
 
             String feedbackGeral = gerarFeedbackGeral(acertos, palavrasEsperadas.size(), pontuacaoGeral);
@@ -114,28 +128,25 @@ public class PronunciationAnalysisService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Erro ao analisar pronúncia: " + e.getMessage(), e);
+            throw new RuntimeException("Erro análise: " + e.getMessage(), e);
         }
     }
 
     private String transcreverAudio(byte[] audioBytes, List<String> palavrasChave) throws IOException {
         RequestBody body = RequestBody.create(audioBytes, MediaType.parse("audio/*"));
-
-        // Constroi a URL base
+        
+        // Reduzimos o Boost para 3.0 (ajuda a identificar, mas não força alucinação)
         StringBuilder urlBuilder = new StringBuilder("https://api.deepgram.com/v1/listen?model=nova-2&language=pt-BR&smart_format=true&punctuate=false&diarize=false");
         
-       
         if (palavrasChave != null) {
             for (String palavra : palavrasChave) {
                 try {
                     String encodedWord = URLEncoder.encode(palavra.trim(), StandardCharsets.UTF_8.toString());
-                    
                     if (!encodedWord.isEmpty()) {
-                        urlBuilder.append("&keywords=").append(encodedWord).append(":2.0");
+                        // MUDANÇA: Boost 3.0 (Era 20.0)
+                        urlBuilder.append("&keywords=").append(encodedWord).append(":3.0");
                     }
-                } catch (Exception e) {
-                    
-                }
+                } catch (Exception e) {}
             }
         }
 
@@ -146,37 +157,33 @@ public class PronunciationAnalysisService {
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                String errorBody = response.body() != null ? response.body().string() : "Sem detalhes";
-                throw new IOException("Erro Deepgram: " + response.code() + " - " + errorBody);
-            }
-
+            if (!response.isSuccessful()) throw new IOException("Erro API: " + response.code());
             String jsonResponse = response.body().string();
             JsonObject json = JsonParser.parseString(jsonResponse).getAsJsonObject();
-
             if (!json.has("results")) return "";
-
             try {
                  return json.getAsJsonObject("results")
-                    .getAsJsonArray("channels")
-                    .get(0).getAsJsonObject()
-                    .getAsJsonArray("alternatives")
-                    .get(0).getAsJsonObject()
+                    .getAsJsonArray("channels").get(0).getAsJsonObject()
+                    .getAsJsonArray("alternatives").get(0).getAsJsonObject()
                     .get("transcript").getAsString();
-            } catch (Exception e) {
-                return "";
-            }
+            } catch (Exception e) { return ""; }
         }
+    }
+
+    // Fonetização mais leve para não misturar palavras muito diferentes
+    private String fonetizarTexto(String texto) {
+        String t = normalizarTexto(texto);
+        t = t.replace("ch", "x");
+        t = t.replace("lh", "li");
+        t = t.replace("nh", "ni");
+        t = t.replace("ç", "s");
+        t = t.replace("ss", "s");
+        return t;
     }
 
     private double calcularSimilaridade(String p1, String p2) {
         if (p1.equals(p2)) return 1.0;
         if (p1.isEmpty() || p2.isEmpty()) return 0.0;
-
-    
-        if (p1.length() > 4 && p2.length() > 4) {
-             if (p1.startsWith(p2) || p2.startsWith(p1)) return 0.95;
-        }
 
         int distancia = levenshtein.apply(p1, p2);
         int maxLen = Math.max(p1.length(), p2.length());
@@ -191,16 +198,17 @@ public class PronunciationAnalysisService {
         return normalized.toLowerCase().trim();
     }
 
-    private String gerarFeedbackPalavra(double similaridade, String esperada, String transcrita) {
-        double pontuacao = similaridade * 100;
-        if (pontuacao >= 90) return "Perfeito! ✅";
-        else if (pontuacao >= 60) return "Muito bom! 👏";
-        else return "Tente falar mais devagar (ouvi: '" + transcrita + "') 🗣️";
+    private String gerarFeedbackPalavra(double pontuacao, String esperada, String transcrita) {
+        // Régua mais rigorosa
+        if (pontuacao >= 90) return "Perfeito!";
+        else if (pontuacao >= 80) return "Muito bom!";
+        else if (pontuacao >= 60) return "Bom, mas pode melhorar (ouvi: " + transcrita + ")";
+        else return "Tente novamente (ouvi: " + transcrita + ")";
     }
 
     private String gerarFeedbackGeral(int acertos, int total, double pontuacaoGeral) {
-        if (pontuacaoGeral >= 85) return "Excelente! Sua pronúncia está ótima. 🎉";
-        else if (pontuacaoGeral >= 60) return "Muito bom! Continue praticando. 👏";
-        else return "Vamos treinar mais um pouco? Tente falar mais perto do microfone. 💪";
+        if (pontuacaoGeral >= 90) return "Excelente! Pronúncia muito clara. 🌟";
+        else if (pontuacaoGeral >= 70) return "Bom trabalho! Continue treinando. 👍";
+        else return "Atenção à articulação. Vamos tentar de novo? 💪";
     }
 }
