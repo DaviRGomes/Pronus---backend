@@ -12,4 +12,5 @@ public class DashboardDtoOut {
     private Integer pontuacaoMedia; // 0 a 100
     private Integer evolucao; // Diferença percentual
     private String observacao;
+    private Integer diasSeguidos; // Streak atual
 }

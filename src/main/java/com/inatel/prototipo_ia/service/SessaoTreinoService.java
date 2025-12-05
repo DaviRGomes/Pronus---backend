@@ -19,7 +19,7 @@ import com.inatel.prototipo_ia.repository.SessaoTreinoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDate;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,6 +56,8 @@ public class SessaoTreinoService {
                 .create();
     }
 
+    // ... (campos e construtor iguais)
+
     /**
      * Retorna estatísticas para o dashboard do cliente
      */
@@ -77,7 +79,6 @@ public class SessaoTreinoService {
         int pontuacaoMedia = totalSessoes > 0 ? (int) Math.round(somaPontuacao / totalSessoes) : 0;
 
         // 3. Evolução (comparar média das 3 últimas vs média das 3 primeiras ou vs histórico geral)
-        // Lógica simplificada: comparar a última sessão com a média geral anterior
         int evolucao = 0;
         if (totalSessoes >= 2) {
             double ultimaPontuacao = sessoes.get(totalSessoes - 1).getPontuacaoGeral();
@@ -90,11 +91,45 @@ public class SessaoTreinoService {
             // Diferença percentual em pontos
             evolucao = (int) Math.round(ultimaPontuacao - mediaAnteriores);
         }
+        
+        // 4. Cálculo de Dias Seguidos (Streak)
+        int diasSeguidos = 0;
+        if (totalSessoes > 0) {
+            // Pega datas únicas de treino, ordenadas decrescente (da mais recente para antiga)
+            List<LocalDate> datasTreino = sessoes.stream()
+                    .map(s -> s.getDataInicio().toLocalDate())
+                    .distinct()
+                    .sorted(Comparator.reverseOrder())
+                    .collect(Collectors.toList());
 
-        // 4. Observação dinâmica baseada na evolução e média
+            LocalDate hoje = LocalDate.now();
+            LocalDate ontem = hoje.minusDays(1);
+            LocalDate ultimaData = datasTreino.get(0);
+
+            // Se a última data for hoje ou ontem, o streak está ativo
+            if (ultimaData.isEqual(hoje) || ultimaData.isEqual(ontem)) {
+                diasSeguidos = 1; // Pelo menos 1 dia (o último treino)
+                LocalDate dataAtualStreak = ultimaData;
+
+                for (int i = 1; i < datasTreino.size(); i++) {
+                    LocalDate dataAnterior = datasTreino.get(i);
+                    // Se a data anterior for exatamente 1 dia antes da data atual do streak
+                    if (dataAnterior.isEqual(dataAtualStreak.minusDays(1))) {
+                        diasSeguidos++;
+                        dataAtualStreak = dataAnterior;
+                    } else {
+                        break; // Quebrou a sequência
+                    }
+                }
+            }
+        }
+
+        // 5. Observação dinâmica
         String observacao;
         if (totalSessoes == 0) {
             observacao = "Você ainda não realizou nenhuma sessão. Comece agora para ver seu progresso!";
+        } else if (diasSeguidos >= 3) {
+            observacao = "Incrível! Você está treinando há " + diasSeguidos + " dias seguidos. Mantenha o foco!";
         } else if (evolucao > 5) {
             observacao = "Parabéns! Você teve uma evolução notável na última sessão comparado à sua média histórica.";
         } else if (evolucao < -5) {
@@ -105,7 +140,7 @@ public class SessaoTreinoService {
             observacao = "Você está mantendo um ritmo constante. Tente aumentar um pouco a dificuldade na próxima vez.";
         }
 
-        return new DashboardDtoOut(totalSessoes, pontuacaoMedia, evolucao, observacao);
+        return new DashboardDtoOut(totalSessoes, pontuacaoMedia, evolucao, observacao, diasSeguidos);
     }
 
 

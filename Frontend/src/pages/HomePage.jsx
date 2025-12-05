@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -6,16 +6,37 @@ export default function HomePage() {
     const { user } = useAuth();
     const { sessoes } = useOutletContext();
     const navigate = useNavigate();
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Calcular estatísticas com dados reais
-    const sessoesFinalizadas = sessoes.filter(s => s.status === 'FINALIZADA');
-    const totalSessoes = sessoesFinalizadas.length;
-    const pontuacaoMedia = totalSessoes > 0 
-        ? Math.round(sessoesFinalizadas.reduce((acc, s) => acc + (s.pontuacaoGeral || 0), 0) / totalSessoes) 
-        : 0;
-    
-    // Sequência de dias (simulado por enquanto, mas pode ser calculado)
-    const sequencia = 3; 
+    useEffect(() => {
+        fetchDashboardData();
+    }, [user.id]);
+
+    const fetchDashboardData = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/sessao-treino/dashboard/${user.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setDashboardData(data);
+            } else {
+                console.error('Erro ao buscar dados do dashboard');
+            }
+        } catch (error) {
+            console.error('Erro na requisição do dashboard:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return <div style={{color: '#fff'}}>Carregando dados...</div>;
+    }
+
+    // Se tiver dados do backend usa eles, senão usa fallback
+    const totalSessoes = dashboardData ? dashboardData.sessoesRealizadas : 0;
+    const pontuacaoMedia = dashboardData ? dashboardData.pontuacaoMedia : 0;
+    const sequencia = dashboardData ? dashboardData.diasSeguidos : 0;
 
     return (
         <div>
@@ -75,3 +96,4 @@ export default function HomePage() {
         </div>
     );
 }
+
