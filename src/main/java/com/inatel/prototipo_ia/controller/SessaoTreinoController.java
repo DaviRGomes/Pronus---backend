@@ -2,6 +2,7 @@ package com.inatel.prototipo_ia.controller;
 
 import com.inatel.prototipo_ia.dto.in.SessaoTreinoDtoIn;
 import com.inatel.prototipo_ia.dto.out.MensagemSessaoDtoOut;
+import com.inatel.prototipo_ia.dto.out.SessaoTreinoHistoryDtoOut;
 import com.inatel.prototipo_ia.service.SessaoTreinoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -140,6 +141,25 @@ public class SessaoTreinoController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(criarErro("Sessão não encontrada: " + sessaoId));
+        }
+    }
+
+    /**
+     * Buscar histórico de sessões de um cliente
+     * GET /api/sessao-treino/historico/cliente/{clienteId}
+     */
+    @Operation(
+            summary = "Buscar histórico de sessões do cliente",
+            description = "Retorna a lista de sessões realizadas pelo cliente com seus resultados"
+    )
+    @GetMapping("/historico/cliente/{clienteId}")
+    public ResponseEntity<?> buscarHistorico(@PathVariable Long clienteId) {
+        try {
+            List<SessaoTreinoHistoryDtoOut> historico = sessaoService.buscarHistoricoPorCliente(clienteId);
+            return ResponseEntity.ok(historico);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(criarErro("Erro ao buscar histórico: " + e.getMessage()));
         }
     }
 

@@ -8,6 +8,7 @@ import com.inatel.prototipo_ia.dto.in.SessaoTreinoDtoIn;
 import com.inatel.prototipo_ia.dto.out.BatchPronunciationAnalysisDTO;
 import com.inatel.prototipo_ia.dto.out.MensagemSessaoDtoOut;
 import com.inatel.prototipo_ia.dto.out.MensagemSessaoDtoOut.ResumoSessao;
+import com.inatel.prototipo_ia.dto.out.SessaoTreinoHistoryDtoOut;
 import com.inatel.prototipo_ia.entity.ClienteEntity;
 import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import com.inatel.prototipo_ia.entity.SessaoTreinoEntity;
@@ -264,5 +265,46 @@ public class SessaoTreinoService {
         msg.setMensagem("Sessão cancelada. Até a próxima! 👋");
         msg.setSessaoFinalizada(true);
         return msg;
+    }
+
+    public List<SessaoTreinoHistoryDtoOut> buscarHistoricoPorCliente(Long clienteId) {
+        List<SessaoTreinoEntity> sessoes = sessaoRepository.findByClienteId(clienteId);
+        List<SessaoTreinoHistoryDtoOut> historico = new ArrayList<>();
+        for (SessaoTreinoEntity s : sessoes) {
+            String feedback = null;
+            List<BatchPronunciationAnalysisDTO.ResultadoPalavra> detalhes = null;
+
+            if (s.getResultado() != null && !s.getResultado().isEmpty()) {
+                try {
+                    BatchPronunciationAnalysisDTO analise = gson.fromJson(s.getResultado(), BatchPronunciationAnalysisDTO.class);
+                    feedback = analise.getFeedbackGeral();
+                    detalhes = analise.getResultados();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    feedback = "Erro ao processar detalhes da sessão.";
+                    detalhes = new ArrayList<>();
+                    BatchPronunciationAnalysisDTO.ResultadoPalavra erro = new BatchPronunciationAnalysisDTO.ResultadoPalavra();
+                    erro.setPalavraEsperada("ERRO_SISTEMA");
+                    erro.setPalavraTranscrita("JSON Inválido");
+                    erro.setAcertou(false);
+                    erro.setFeedback("Erro: " + e.getMessage() + " | JSON: " + (s.getResultado().length() > 50 ? s.getResultado().substring(0, 50) + "..." : s.getResultado()));
+                    detalhes.add(erro);
+                }
+            }
+
+            historico.add(new SessaoTreinoHistoryDtoOut(
+                    s.getId(),
+                    s.getDataInicio(),
+                    s.getDataFim(),
+                    s.getPontuacaoGeral(),
+                    s.getTotalAcertos(),
+                    s.getTotalPalavras(),
+                    s.getDificuldade(),
+                    s.getStatus().name(),
+                    feedback,
+                    detalhes
+            ));
+        }
+        return historico;
     }
 }
