@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 // Adicionamos a importação para as classes de segurança do Spring
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -44,7 +45,14 @@ public class UsuarioEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); 
+        if (this instanceof EspecialistaEntity) {
+            return List.of(new SimpleGrantedAuthority("ROLE_ESPECIALISTA"));
+        } else if (this instanceof ClienteEntity) {
+            return List.of(new SimpleGrantedAuthority("ROLE_CLIENTE"));
+        } else if (this instanceof SecretariaEntity) {
+            return List.of(new SimpleGrantedAuthority("ROLE_SECRETARIA"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

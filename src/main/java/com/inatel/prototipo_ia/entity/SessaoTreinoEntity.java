@@ -35,39 +35,18 @@ public class SessaoTreinoEntity {
     @Column(name = "idade_cliente", nullable = false)
     private Integer idadeCliente;
 
-    @Column(name = "total_ciclos", nullable = false)
-    private Integer totalCiclos;
+    // Conteúdo do treino
+    @Column(name = "trava_lingua", columnDefinition = "TEXT")
+    private String travaLingua;
 
-    @Column(name = "palavras_por_ciclo", nullable = false)
-    private Integer palavrasPorCiclo;
+    // Resultado da análise (JSON serializado)
+    @Column(name = "resultado", columnDefinition = "TEXT")
+    private String resultado;
 
     // Estado atual da sessão
-    @Column(name = "ciclo_atual", nullable = false)
-    private Integer cicloAtual;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusSessao status;
-
-    // Palavras de cada ciclo (JSON serializado)
-    @Column(name = "palavras_ciclo1", columnDefinition = "TEXT")
-    private String palavrasCiclo1;
-
-    @Column(name = "palavras_ciclo2", columnDefinition = "TEXT")
-    private String palavrasCiclo2;
-
-    @Column(name = "palavras_ciclo3", columnDefinition = "TEXT")
-    private String palavrasCiclo3;
-
-    // Resultados de cada ciclo (JSON serializado)
-    @Column(name = "resultado_ciclo1", columnDefinition = "TEXT")
-    private String resultadoCiclo1;
-
-    @Column(name = "resultado_ciclo2", columnDefinition = "TEXT")
-    private String resultadoCiclo2;
-
-    @Column(name = "resultado_ciclo3", columnDefinition = "TEXT")
-    private String resultadoCiclo3;
 
     // Métricas gerais
     @Column(name = "total_palavras")
@@ -101,10 +80,7 @@ public class SessaoTreinoEntity {
     // Construtor padrão
     public SessaoTreinoEntity() {
         this.dataInicio = LocalDateTime.now();
-        this.cicloAtual = 0;
         this.status = StatusSessao.INICIADA;
-        this.totalCiclos = 3;
-        this.palavrasPorCiclo = 3;
         this.totalPalavras = 0;
         this.totalAcertos = 0;
         this.pontuacaoGeral = 0.0;
@@ -116,38 +92,5 @@ public class SessaoTreinoEntity {
         String timestamp = LocalDateTime.now().toString();
         String novaLinha = "[" + timestamp + "] " + remetente + ": " + mensagem + "\n";
         this.historicoConversa = (this.historicoConversa == null ? "" : this.historicoConversa) + novaLinha;
-    }
-
-    public boolean isUltimoCiclo() {
-        return this.cicloAtual >= this.totalCiclos;
-    }
-
-    public void avancarCiclo() {
-        this.cicloAtual++;
-    }
-
-    public String getPalavrasCicloAtual() {
-        switch (this.cicloAtual) {
-            case 1: return this.palavrasCiclo1;
-            case 2: return this.palavrasCiclo2;
-            case 3: return this.palavrasCiclo3;
-            default: return null;
-        }
-    }
-
-    public void setPalavrasCicloAtual(String palavras) {
-        switch (this.cicloAtual) {
-            case 1: this.palavrasCiclo1 = palavras; break;
-            case 2: this.palavrasCiclo2 = palavras; break;
-            case 3: this.palavrasCiclo3 = palavras; break;
-        }
-    }
-
-    public void setResultadoCicloAtual(String resultado) {
-        switch (this.cicloAtual) {
-            case 1: this.resultadoCiclo1 = resultado; break;
-            case 2: this.resultadoCiclo2 = resultado; break;
-            case 3: this.resultadoCiclo3 = resultado; break;
-        }
     }
 }

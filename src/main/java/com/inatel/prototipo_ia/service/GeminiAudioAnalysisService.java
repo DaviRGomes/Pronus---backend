@@ -7,6 +7,7 @@ import com.inatel.prototipo_ia.dto.out.BatchPronunciationAnalysisDTO;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -122,20 +123,69 @@ public class GeminiAudioAnalysisService {
     private BatchPronunciationAnalysisDTO parsearRespostaBatch(String respostaGemini, List<String> palavrasEsperadas) {
         try {
             String jsonLimpo = respostaGemini.trim();
-            if (jsonLimpo.startsWith("```json")) jsonLimpo = jsonLimpo.substring(7);
-            if (jsonLimpo.endsWith("```")) jsonLimpo = jsonLimpo.substring(0, jsonLimpo.length() - 3);
+            if (jsonLimpo.startsWith("```json")) {
+                int startIndex = jsonLimpo.indexOf("{");
+                int endIndex = jsonLimpo.lastIndexOf("}");
+                if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                    jsonLimpo = jsonLimpo.substring(startIndex, endIndex + 1);
+                }
+            } else if (jsonLimpo.startsWith("```")) {
+                jsonLimpo = jsonLimpo.substring(3);
+            }
+            if (jsonLimpo.endsWith("```")) {
+                jsonLimpo = jsonLimpo.substring(0, jsonLimpo.length() - 3);
+            }
             
             JsonObject json = JsonParser.parseString(jsonLimpo).getAsJsonObject();
             BatchPronunciationAnalysisDTO dto = new BatchPronunciationAnalysisDTO();
             
+            dto.setPalavrasEsperadas(palavrasEsperadas);
             dto.setFeedbackGeral(json.has("feedbackGeral") ? json.get("feedbackGeral").getAsString() : "Análise ok");
             dto.setPontuacaoGeral(json.has("pontuacaoGeral") ? json.get("pontuacaoGeral").getAsDouble() : 0.0);
-            dto.setResultados(new ArrayList<>()); 
             
+            List<BatchPronunciationAnalysisDTO.ResultadoPalavra> resultados = new ArrayList<>();
+            int totalAcertos = 0;
+            int totalPalavras = 0;
+
+            if (json.has("resultados") && json.get("resultados").isJsonArray()) {
+                JsonArray resultadosArray = json.getAsJsonArray("resultados");
+                totalPalavras = resultadosArray.size();
+
+                for (int i = 0; i < resultadosArray.size(); i++) {
+                    JsonObject resultadoJson = resultadosArray.get(i).getAsJsonObject();
+                    BatchPronunciationAnalysisDTO.ResultadoPalavra resultadoPalavra = new BatchPronunciationAnalysisDTO.ResultadoPalavra();
+
+                    resultadoPalavra.setPalavraEsperada(resultadoJson.has("palavraEsperada") ? resultadoJson.get("palavraEsperada").getAsString() : "");
+                    resultadoPalavra.setPalavraTranscrita(resultadoJson.has("palavraTranscrita") ? resultadoJson.get("palavraTranscrita").getAsString() : "");
+                    resultadoPalavra.setAcertou(resultadoJson.has("acertou") ? resultadoJson.get("acertou").getAsBoolean() : false);
+                    resultadoPalavra.setSimilaridade(resultadoJson.has("similaridade") ? resultadoJson.get("similaridade").getAsDouble() : 0.0);
+                    resultadoPalavra.setFeedback(resultadoJson.has("feedback") ? resultadoJson.get("feedback").getAsString() : "");
+                    
+                    if (resultadoPalavra.getAcertou()) {
+                        totalAcertos++;
+                    }
+                    resultados.add(resultadoPalavra);
+                }
+            }
+            dto.setResultados(resultados);
+            dto.setTotalAcertos(totalAcertos);
+            dto.setTotalPalavras(totalPalavras);
+            dto.setPorcentagemAcerto(totalPalavras > 0 ? (double) totalAcertos / totalPalavras * 100.0 : 0.0);
+            
+            // Assuming transcricaoCompleta is not directly provided by Gemini for now.
+            // It could be constructed by joining individual palavraTranscrita if needed.
+            dto.setTranscricaoCompleta(palavrasEsperadas.stream().collect(Collectors.joining(" ")));
+
+
             return dto;
         } catch (Exception e) {
             e.printStackTrace();
-            return new BatchPronunciationAnalysisDTO();
+            System.err.println("Erro ao parsear resposta Gemini: " + respostaGemini);
+            // In case of parsing error, return a DTO with error feedback
+            BatchPronunciationAnalysisDTO errorDto = new BatchPronunciationAnalysisDTO();
+            errorDto.setFeedbackGeral("Erro ao processar a resposta da IA: " + e.getMessage());
+            errorDto.setResultados(new ArrayList<>());
+            return errorDto;
         }
     }
 }

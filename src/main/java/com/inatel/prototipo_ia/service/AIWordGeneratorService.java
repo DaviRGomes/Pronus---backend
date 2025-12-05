@@ -39,42 +39,56 @@ public class AIWordGeneratorService {
      */
     public List<String> gerarPalavrasComIA(int idade, String dificuldade, int quantidade) {
         try {
-            String prompt = construirPrompt(idade, dificuldade, quantidade);
+            String prompt = construirPromptTravaLingua(idade, dificuldade);
             String response = chamarGeminiAPI(prompt);
-            return extrairPalavras(response);
+            return extrairTravaLingua(response);
 
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao gerar palavras com IA: " + e.getMessage(), e);
+            throw new RuntimeException("Erro ao gerar trava-língua com IA: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Constrói o prompt personalizado para a IA
+     * Constrói o prompt personalizado para a IA gerar um trava-língua
      */
-    private String construirPrompt(int idade, String dificuldade, int quantidade) {
+    private String construirPromptTravaLingua(int idade, String dificuldade) {
+        if ("X".equalsIgnoreCase(dificuldade)) {
+            return "Você é um roteirista de comédia e especialista em cultura pop brasileira. " +
+                   "Gere um trava-língua ENGRAÇADO e curto para exercício de pronúncia com o som de 'X'.\n\n" +
+                   "TEMA OBRIGATÓRIO:\n" +
+                   "O trava-língua DEVE ser sobre a XUXA e sua filha SASHA.\n\n" +
+                   "REQUISITOS OBRIGATÓRIOS:\n" +
+                   "1. Deve ser engraçado e usar o som do 'X' e 'CH' (que tem som de X) de forma criativa.\n" +
+                   "2. Apropriado para todas as idades.\n" +
+                   "3. O resultado deve ser diferente a cada vez que for gerado.\n\n" +
+                   "FORMATO DA RESPOSTA:\n" +
+                   "Retorne APENAS um objeto JSON com uma única chave 'trava_lingua' contendo o texto, SEM nenhum texto adicional antes ou depois.\n" +
+                   "Formato: {\"trava_lingua\": \"A Xuxa achou o xale da Sasha roxo.\"}\n" +
+                   "NÃO adicione explicações, comentários ou markdown.\n\n" +
+                   "Gere um trava-língua NOVO e DIFERENTE a cada vez sobre a Xuxa e a Sasha agora:";
+        }
+
         String faixaEtaria = determinarFaixaEtaria(idade);
         String descricaoDificuldade = descricaoDaDificuldade(dificuldade);
 
         return String.format(
                 "Você é um fonoaudiólogo especialista em terapia da fala para falantes de português brasileiro. " +
-                        "Gere exatamente %d palavras para exercício de pronúncia.\n\n" +
-                        "PERFIL DO PACIENTE:\n" +
-                        "- Idade: %d anos (%s)\n" +
-                        "- Dificuldade: %s\n" +
-                        "- Nível: %s\n\n" +
-                        "REQUISITOS OBRIGATÓRIOS:\n" +
-                        "1. As palavras DEVEM conter o som/fonema da dificuldade especificada\n" +
-                        "2. Palavras apropriadas para a idade (vocabulário que o paciente conhece)\n" +
-                        "3. Variar a posição do som: início, meio e fim da palavra\n" +
-                        "4. Incluir diferentes níveis de complexidade silábica\n" +
-                        "5. Palavras do cotidiano brasileiro (coisas que a pessoa vê no dia a dia)\n" +
-                        "6. Evitar palavras muito técnicas ou raras\n\n" +
-                        "FORMATO DA RESPOSTA:\n" +
-                        "Retorne APENAS um array JSON com as palavras, SEM nenhum texto adicional antes ou depois.\n" +
-                        "Formato: [\"palavra1\", \"palavra2\", \"palavra3\"]\n" +
-                        "NÃO adicione explicações, comentários ou markdown.\n\n" +
-                        "Gere exatamente %d palavras agora:",
-                quantidade, idade, faixaEtaria, descricaoDificuldade, getNivelComplexidade(idade), quantidade
+                "Gere um trava-língua para exercício de pronúncia.\n\n" +
+                "PERFIL DO PACIENTE:\n" +
+                "- Idade: %d anos (%s)\n" +
+                "- Dificuldade: %s\n\n" +
+                "REQUISITOS OBRIGATÓRIOS:\n" +
+                "1. O trava-língua DEVE focar no som/fonema da dificuldade especificada.\n" +
+                "2. O trava-língua deve ser apropriado para a idade (vocabulário e tema que o paciente conhece).\n" +
+                "3. O trava-língua deve ser curto e fácil de memorizar.\n" +
+                "4. Use palavras do cotidiano brasileiro.\n" +
+                "5. Evitar temas muito complexos ou abstratos.\n\n" +
+                "FORMATO DA RESPOSTA:\n" +
+                "Retorne APENAS um objeto JSON com uma única chave 'trava_lingua' contendo o texto, SEM nenhum texto adicional antes ou depois.\n" +
+                "Formato: {\"trava_lingua\": \"O rato roeu a roupa do rei de Roma.\"}\n" +
+                "NÃO adicione explicações, comentários ou markdown.\n\n" +
+                "Gere um trava-língua agora:",
+                idade, faixaEtaria, descricaoDificuldade
         );
     }
 
@@ -140,19 +154,17 @@ public class AIWordGeneratorService {
     /**
      * Extrai as palavras da resposta da IA
      */
-    private List<String> extrairPalavras(String response) {
-        List<String> palavras = new ArrayList<>();
-
+    private List<String> extrairTravaLingua(String response) {
+        List<String> travaLinguaList = new ArrayList<>();
         try {
             // Limpar a resposta
             response = response.trim();
 
-            // Remover possíveis marcadores de código
-            if (response.contains("```json")) {
-                int start = response.indexOf("[");
-                int end = response.lastIndexOf("]") + 1;
-                if (start >= 0 && end > start) {
-                    response = response.substring(start, end);
+            if (response.startsWith("```json")) {
+                int startIndex = response.indexOf("{");
+                int endIndex = response.lastIndexOf("}");
+                if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                    response = response.substring(startIndex, endIndex + 1);
                 }
             } else if (response.startsWith("```")) {
                 response = response.substring(3);
@@ -163,30 +175,24 @@ public class AIWordGeneratorService {
             response = response.trim();
 
             // Tentar parsear como JSON
-            JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
-            jsonArray.forEach(element -> {
-                String palavra = element.getAsString().toLowerCase().trim();
-                if (!palavra.isEmpty()) {
-                    palavras.add(palavra);
+            JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();
+            if (jsonObject.has("trava_lingua")) {
+                String travaLingua = jsonObject.get("trava_lingua").getAsString();
+                if (!travaLingua.isEmpty()) {
+                    travaLinguaList.add(travaLingua);
                 }
-            });
+            }
 
         } catch (Exception e) {
-            // Fallback: extrair palavras manualmente
-            System.err.println("Erro ao parsear JSON, tentando extração manual: " + e.getMessage());
-            String[] linhas = response.split("[\\n,]");
-            for (String linha : linhas) {
-                String palavra = linha.trim()
-                        .replaceAll("[\\[\\]\"'`]", "")
-                        .toLowerCase()
-                        .trim();
-                if (!palavra.isEmpty() && palavra.matches("[a-záàâãéèêíïóôõöúçñ]+")) {
-                    palavras.add(palavra);
-                }
+            // Fallback: se o JSON falhar, assuma que a resposta é o trava-língua puro
+            System.err.println("Erro ao parsear JSON, tratando a resposta como texto puro: " + e.getMessage());
+            String cleanedResponse = response.replaceAll("[\"'{}]", "").replace("trava_lingua:", "").trim();
+            if (!cleanedResponse.isEmpty()) {
+                travaLinguaList.add(cleanedResponse);
             }
         }
 
-        return palavras;
+        return travaLinguaList;
     }
 
     /**

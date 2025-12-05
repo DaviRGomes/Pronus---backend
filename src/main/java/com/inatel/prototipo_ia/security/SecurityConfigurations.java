@@ -62,6 +62,7 @@ public class SecurityConfigurations {
                     req.requestMatchers("/api/sessao-treino/**").permitAll();
                     req.requestMatchers("/chats/**").authenticated();
                     req.requestMatchers("/api/pronunciation/**").permitAll();
+                    req.requestMatchers("/relatorios/**").hasRole("ESPECIALISTA");
                     req.requestMatchers("/error").permitAll();
                     req.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
                     req.anyRequest().authenticated();
