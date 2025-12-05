@@ -2,8 +2,8 @@
 
 -- Adiciona as colunas 'login' e 'senha' na tabela 'Usuario'
 ALTER TABLE Usuario
-ADD COLUMN login VARCHAR(255),
-ADD COLUMN senha VARCHAR(255);
+ADD COLUMN IF NOT EXISTS login VARCHAR(255),
+ADD COLUMN IF NOT EXISTS senha VARCHAR(255);
 
 -- Preenche login e senha derivados antes de aplicar NOT NULL e UNIQUE
 UPDATE Usuario
@@ -20,8 +20,16 @@ ALTER COLUMN login SET NOT NULL,
 ALTER COLUMN senha SET NOT NULL;
 
 -- Adiciona a constraint de unicidade para o login
-ALTER TABLE Usuario
-ADD CONSTRAINT uk_usuario_login UNIQUE (login);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uk_usuario_login'
+    ) THEN
+        ALTER TABLE Usuario
+        ADD CONSTRAINT uk_usuario_login UNIQUE (login);
+    END IF;
+END
+$$;
 
 -- Atualiza os registros existentes com um login padronizado e uma senha criptografada
 -- A senha para todos os usuários será '123456'

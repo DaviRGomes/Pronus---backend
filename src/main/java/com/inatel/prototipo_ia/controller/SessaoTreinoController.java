@@ -164,6 +164,26 @@ public class SessaoTreinoController {
     }
 
     /**
+     * Buscar dados do dashboard (estatísticas) de um cliente
+     * GET /api/sessao-treino/dashboard/{clienteId}
+     */
+    @Operation(
+            summary = "Buscar estatísticas do dashboard do cliente",
+            description = "Retorna total de sessões, pontuação média, evolução e observação personalizada"
+    )
+    @GetMapping("/dashboard/{clienteId}")
+    public ResponseEntity<?> buscarDashboard(@PathVariable Long clienteId) {
+        try {
+            // Verifica se cliente existe (opcional, mas boa prática)
+            // Aqui confiamos no service ou tratamos exceção se não encontrar sessões
+            return ResponseEntity.ok(sessaoService.buscarDashboard(clienteId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(criarErro("Erro ao buscar dashboard: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Helper para criar mensagens de erro padronizadas
      */
     private Map<String, String> criarErro(String mensagem) {

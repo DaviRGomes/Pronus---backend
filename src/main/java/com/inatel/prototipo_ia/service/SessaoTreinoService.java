@@ -1,11 +1,11 @@
 package com.inatel.prototipo_ia.service;
 
 import com.google.gson.Gson;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.inatel.prototipo_ia.adapter.LocalDateTimeAdapter;
 import com.inatel.prototipo_ia.dto.in.SessaoTreinoDtoIn;
 import com.inatel.prototipo_ia.dto.out.BatchPronunciationAnalysisDTO;
+import com.inatel.prototipo_ia.dto.out.DashboardDtoOut;
 import com.inatel.prototipo_ia.dto.out.MensagemSessaoDtoOut;
 import com.inatel.prototipo_ia.dto.out.MensagemSessaoDtoOut.ResumoSessao;
 import com.inatel.prototipo_ia.dto.out.SessaoTreinoHistoryDtoOut;
@@ -24,8 +24,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -53,6 +55,59 @@ public class SessaoTreinoService {
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .create();
     }
+
+    /**
+     * Retorna estatísticas para o dashboard do cliente
+     */
+    public DashboardDtoOut buscarDashboard(Long clienteId) {
+        // Buscar todas as sessões finalizadas do cliente
+        List<SessaoTreinoEntity> sessoes = sessaoRepository.findByClienteIdAndStatus(
+                clienteId, StatusSessao.FINALIZADA);
+
+        // Ordenar por data (mais antiga -> mais recente)
+        sessoes.sort(Comparator.comparing(SessaoTreinoEntity::getDataInicio));
+
+        // 1. Total de sessões realizadas
+        int totalSessoes = sessoes.size();
+
+        // 2. Pontuação média (0 a 100)
+        double somaPontuacao = sessoes.stream()
+                .mapToDouble(s -> s.getPontuacaoGeral() != null ? s.getPontuacaoGeral() : 0.0)
+                .sum();
+        int pontuacaoMedia = totalSessoes > 0 ? (int) Math.round(somaPontuacao / totalSessoes) : 0;
+
+        // 3. Evolução (comparar média das 3 últimas vs média das 3 primeiras ou vs histórico geral)
+        // Lógica simplificada: comparar a última sessão com a média geral anterior
+        int evolucao = 0;
+        if (totalSessoes >= 2) {
+            double ultimaPontuacao = sessoes.get(totalSessoes - 1).getPontuacaoGeral();
+            // Média das anteriores (excluindo a última)
+            double somaAnteriores = sessoes.subList(0, totalSessoes - 1).stream()
+                    .mapToDouble(s -> s.getPontuacaoGeral() != null ? s.getPontuacaoGeral() : 0.0)
+                    .sum();
+            double mediaAnteriores = somaAnteriores / (totalSessoes - 1);
+            
+            // Diferença percentual em pontos
+            evolucao = (int) Math.round(ultimaPontuacao - mediaAnteriores);
+        }
+
+        // 4. Observação dinâmica baseada na evolução e média
+        String observacao;
+        if (totalSessoes == 0) {
+            observacao = "Você ainda não realizou nenhuma sessão. Comece agora para ver seu progresso!";
+        } else if (evolucao > 5) {
+            observacao = "Parabéns! Você teve uma evolução notável na última sessão comparado à sua média histórica.";
+        } else if (evolucao < -5) {
+            observacao = "Sua última sessão foi um pouco abaixo da sua média. Continue praticando para recuperar o ritmo!";
+        } else if (pontuacaoMedia >= 80) {
+            observacao = "Você mantém um desempenho consistentemente alto. Excelente trabalho!";
+        } else {
+            observacao = "Você está mantendo um ritmo constante. Tente aumentar um pouco a dificuldade na próxima vez.";
+        }
+
+        return new DashboardDtoOut(totalSessoes, pontuacaoMedia, evolucao, observacao);
+    }
+
 
     /**
      * Inicia uma nova sessão de treino baseada em trava-língua.

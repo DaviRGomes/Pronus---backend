@@ -17,6 +17,9 @@ $$;
 
 CREATE INDEX IF NOT EXISTS idx_chat_especialista ON Chat (especialista_id);
 
+-- 1.1) Permite que profissional_id seja nulo, pois agora usamos especialista_id
+ALTER TABLE Chat ALTER COLUMN profissional_id DROP NOT NULL;
+
 -- 2) Recria o chat semente (Cliente Demo x Especialista Demo) se necessário
 WITH cli AS (
     SELECT c.usuario_id AS cliente_id

@@ -1,5 +1,5 @@
 -- Tabela base Usuario
-CREATE TABLE Usuario (
+CREATE TABLE IF NOT EXISTS Usuario (
     id BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     idade INT,
@@ -7,14 +7,14 @@ CREATE TABLE Usuario (
 );
 
 -- Cliente herda de Usuario (1:1)
-CREATE TABLE Cliente (
+CREATE TABLE IF NOT EXISTS Cliente (
     usuario_id BIGINT PRIMARY KEY,
     nivel VARCHAR(50), -- Enum pode ser armazenado como VARCHAR
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id)
 );
 
 -- Profissional herda de Usuario (1:1)
-CREATE TABLE Profissional (
+CREATE TABLE IF NOT EXISTS Profissional (
     usuario_id BIGINT PRIMARY KEY,
     certificados VARCHAR(255), -- pode ser JSON ou tabela separada
     experiencia INT,
@@ -22,7 +22,7 @@ CREATE TABLE Profissional (
 );
 
 -- Chat relacionado Cliente e Profissional (N:1 de cada lado)
-CREATE TABLE Chat (
+CREATE TABLE IF NOT EXISTS Chat (
     id BIGSERIAL PRIMARY KEY,
     cliente_id BIGINT NOT NULL,
     profissional_id BIGINT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE Chat (
 );
 
 -- Relatorio associado a um Chat (1:1)
-CREATE TABLE Relatorio (
+CREATE TABLE IF NOT EXISTS Relatorio (
     id BIGSERIAL PRIMARY KEY,
     chat_id BIGINT UNIQUE NOT NULL,
     acuracia FLOAT,
@@ -42,7 +42,7 @@ CREATE TABLE Relatorio (
 );
 
 -- Tratamento associado a um Profissional (N:1)
-CREATE TABLE Tratamento (
+CREATE TABLE IF NOT EXISTS Tratamento (
     id BIGSERIAL PRIMARY KEY,
     profissional_id BIGINT NOT NULL,
     quantidadeDia INT,

@@ -1,10 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import html2pdf from 'html2pdf.js';
 
 export default function ReportsPage() {
     const { user } = useAuth();
     const [generating, setGenerating] = useState(false);
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [user.id]);
+
+    const fetchDashboardData = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/sessao-treino/dashboard/${user.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setDashboardData(data);
+            } else {
+                console.error('Erro ao buscar dados do dashboard');
+            }
+        } catch (error) {
+            console.error('Erro na requisição do dashboard:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const generateReport = async () => {
         setGenerating(true);
@@ -20,6 +42,10 @@ export default function ReportsPage() {
             setGenerating(false);
         }, 1000);
     };
+
+    if (loading) {
+        return <div style={{color: '#fff'}}>Carregando dados...</div>;
+    }
 
     return (
         <div>
@@ -57,15 +83,21 @@ export default function ReportsPage() {
                     <h2 style={{color:'#333',fontSize:20,marginBottom:12}}>Resumo de Desempenho</h2>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
                         <div style={{background:'#f0f9ff',padding:16,borderRadius:12,textAlign:'center'}}>
-                            <div style={{fontSize:28,fontWeight:700,color:'#6366f1'}}>5</div>
+                            <div style={{fontSize:28,fontWeight:700,color:'#6366f1'}}>
+                                {dashboardData ? dashboardData.sessoesRealizadas : 0}
+                            </div>
                             <div style={{color:'#666',fontSize:13}}>Sessões Realizadas</div>
                         </div>
                         <div style={{background:'#f0fdf4',padding:16,borderRadius:12,textAlign:'center'}}>
-                            <div style={{fontSize:28,fontWeight:700,color:'#22c55e'}}>78%</div>
+                            <div style={{fontSize:28,fontWeight:700,color:'#22c55e'}}>
+                                {dashboardData ? dashboardData.pontuacaoMedia : 0}%
+                            </div>
                             <div style={{color:'#666',fontSize:13}}>Pontuação Média</div>
                         </div>
                         <div style={{background:'#fefce8',padding:16,borderRadius:12,textAlign:'center'}}>
-                            <div style={{fontSize:28,fontWeight:700,color:'#eab308'}}>+13%</div>
+                            <div style={{fontSize:28,fontWeight:700,color: (dashboardData?.evolucao >= 0 ? '#eab308' : '#ef4444')}}>
+                                {dashboardData && dashboardData.evolucao >= 0 ? '+' : ''}{dashboardData ? dashboardData.evolucao : 0}%
+                            </div>
                             <div style={{color:'#666',fontSize:13}}>Evolução</div>
                         </div>
                     </div>
@@ -74,9 +106,7 @@ export default function ReportsPage() {
                 <div style={{marginBottom:24}}>
                     <h2 style={{color:'#333',fontSize:20,marginBottom:12}}>Observações</h2>
                     <p style={{color:'#666',lineHeight:1.8}}>
-                        O paciente demonstra progresso consistente nas sessões de treino. 
-                        Recomenda-se continuar praticando os fonemas R e L, onde foram identificadas 
-                        as maiores oportunidades de melhoria. O engajamento com a plataforma tem sido positivo.
+                        {dashboardData ? dashboardData.observacao : "Nenhuma observação disponível."}
                     </p>
                 </div>
 
@@ -88,3 +118,4 @@ export default function ReportsPage() {
         </div>
     );
 }
+

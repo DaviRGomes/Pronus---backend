@@ -50,3 +50,5 @@ CREATE INDEX IF NOT EXISTS idx_sessao_cliente ON sessaotreino(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_sessao_especialista ON sessaotreino(especialista_id);
 CREATE INDEX IF NOT EXISTS idx_sessao_status ON sessaotreino(status);
 CREATE INDEX IF NOT EXISTS idx_sessao_datainicio ON sessaotreino(datainicio);
+
+ALTER TABLE Chat ALTER COLUMN profissional_id DROP NOT NULL;
