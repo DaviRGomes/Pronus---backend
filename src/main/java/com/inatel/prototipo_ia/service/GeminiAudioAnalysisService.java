@@ -77,7 +77,7 @@ public class GeminiAudioAnalysisService {
         );
 
         // --- MUDANÇA CRÍTICA: USANDO A VERSÃO v1 (PRODUÇÃO) ---
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
 
         Request request = new Request.Builder()
                 .url(url)
