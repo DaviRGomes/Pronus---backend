@@ -14,4 +14,8 @@ public class EspecialistaDtoOut {
     private String endereco;
     private String crmFono;
     private String especialidade;
+    private java.util.List<Long> consultaIds;
+    private java.util.List<Long> disponibilidadeIds;
+    private java.util.List<Long> chatIds;
+    private java.util.List<Long> relatorioIds;
 }

@@ -15,5 +15,7 @@ public class ClienteDtoOut {
     private Integer idade;
     private String endereco;
     private String nivel;
-    private List<Long> chatIds;
+    private java.util.List<Long> chatIds;
+    private java.util.List<Long> consultaIds;
+    private java.util.List<Long> certificadoIds;
 }

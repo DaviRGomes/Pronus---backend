@@ -3,7 +3,6 @@ package com.inatel.prototipo_ia.service;
 import com.inatel.prototipo_ia.dto.in.ProfissionalDtoIn;
 import com.inatel.prototipo_ia.dto.out.ProfissionalDtoOut;
 import com.inatel.prototipo_ia.entity.ProfissionalEntity;
-import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ProfissionalRepository;
 import com.inatel.prototipo_ia.repository.TratamentoRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,13 +19,11 @@ import java.util.stream.Collectors;
 public class ProfissionalService {
 
     private final ProfissionalRepository profissionalRepository;
-    private final ChatRepository chatRepository;
     private final TratamentoRepository tratamentoRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public ProfissionalService(ProfissionalRepository profissionalRepository, ChatRepository chatRepository, TratamentoRepository tratamentoRepository, PasswordEncoder passwordEncoder) {
+    public ProfissionalService(ProfissionalRepository profissionalRepository, TratamentoRepository tratamentoRepository, PasswordEncoder passwordEncoder) {
         this.profissionalRepository = profissionalRepository;
-        this.chatRepository = chatRepository;
         this.tratamentoRepository = tratamentoRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -92,11 +89,10 @@ public class ProfissionalService {
             throw new EntityNotFoundException("Profissional não encontrado com o ID: " + id);
         }
 
-        boolean emUsoEmChat = chatRepository.existsByProfissionalId(id);
         boolean emUsoEmTratamento = tratamentoRepository.existsByProfissionalId(id);
 
-        if (emUsoEmChat || emUsoEmTratamento) {
-            throw new IllegalStateException("Não é possível deletar o profissional pois ele está associado a chats ou tratamentos existentes.");
+        if (emUsoEmTratamento) {
+            throw new IllegalStateException("Não é possível deletar o profissional pois ele está associado a tratamentos existentes.");
         }
 
         profissionalRepository.deleteById(id);
@@ -145,10 +141,6 @@ public class ProfissionalService {
      * Conversor de Entidade -> DTO Out.
      */
     private ProfissionalDtoOut toDto(ProfissionalEntity entity) {
-        List<Long> chatIds = (entity.getChats() != null)
-                ? entity.getChats().stream().map(c -> c.getId()).collect(Collectors.toList())
-                : null;
-
         List<Long> tratamentoIds = (entity.getTratamentos() != null)
                 ? entity.getTratamentos().stream().map(t -> t.getId()).collect(Collectors.toList())
                 : null;
@@ -160,7 +152,6 @@ public class ProfissionalService {
         dto.setEndereco(entity.getEndereco());
         dto.setCertificados(entity.getCertificados());
         dto.setExperiencia(entity.getExperiencia());
-        dto.setChatIds(chatIds);
         dto.setTratamentoIds(tratamentoIds);
         return dto;
     }

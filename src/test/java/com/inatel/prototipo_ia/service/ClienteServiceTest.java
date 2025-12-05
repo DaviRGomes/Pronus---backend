@@ -5,6 +5,8 @@ import com.inatel.prototipo_ia.dto.out.ClienteDtoOut;
 import com.inatel.prototipo_ia.entity.ClienteEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ClienteRepository;
+import com.inatel.prototipo_ia.repository.ConsultaRepository;
+import com.inatel.prototipo_ia.repository.CertificadoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +33,15 @@ class ClienteServiceTest {
 
     @Mock
     private ChatRepository chatRepository;
+
+    @Mock
+    private ConsultaRepository consultaRepository;
+
+    @Mock
+    private CertificadoRepository certificadoRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private ClienteService clienteService;

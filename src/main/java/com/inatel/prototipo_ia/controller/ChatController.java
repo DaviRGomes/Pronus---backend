@@ -22,6 +22,11 @@ public class ChatController {
         return ResponseEntity.ok(service.criar(chat));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ChatDtoOut> atualizar(@PathVariable Long id, @RequestBody ChatDtoIn chat) {
+        return ResponseEntity.ok(service.atualizar(id, chat));
+    }
+
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<List<ChatDtoOut>> buscarPorClienteId(@PathVariable Long clienteId) {
         return ResponseEntity.ok(service.buscarPorClienteId(clienteId));

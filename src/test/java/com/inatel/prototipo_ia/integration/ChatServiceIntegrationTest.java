@@ -4,10 +4,10 @@ import com.inatel.prototipo_ia.dto.in.ChatDtoIn;
 import com.inatel.prototipo_ia.dto.out.ChatDtoOut;
 import com.inatel.prototipo_ia.entity.ChatEntity;
 import com.inatel.prototipo_ia.entity.ClienteEntity;
-import com.inatel.prototipo_ia.entity.ProfissionalEntity;
+import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ClienteRepository;
-import com.inatel.prototipo_ia.repository.ProfissionalRepository;
+import com.inatel.prototipo_ia.repository.EspecialistaRepository;
 import com.inatel.prototipo_ia.service.ChatService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,8 +38,8 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         @Bean
         public ChatService chatService(ChatRepository chatRepository,
                                         ClienteRepository clienteRepository,
-                                        ProfissionalRepository profissionalRepository) {
-            return new ChatService(chatRepository, clienteRepository, profissionalRepository);
+                                        EspecialistaRepository especialistaRepository) {
+            return new ChatService(chatRepository, clienteRepository, especialistaRepository);
         }
     }
 
@@ -50,23 +50,23 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
     private ClienteRepository clienteRepository;
 
     @Autowired
-    private ProfissionalRepository profissionalRepository;
+    private EspecialistaRepository especialistaRepository;
 
     @Autowired
     private ChatService chatService;
 
     private ClienteEntity clientePadrao;
-    private ProfissionalEntity profissionalPadrao;
+    private EspecialistaEntity especialistaPadrao;
 
     @BeforeEach
     void setUp() {
         chatRepository.deleteAll();
-        profissionalRepository.deleteAll();
+        especialistaRepository.deleteAll();
         clienteRepository.deleteAll();
 
         // Setup de cliente e profissional padrões pra usar nos testes
         clientePadrao = criarEPersistirCliente("Cliente Chat", "clientechat@teste.com");
-        profissionalPadrao = criarEPersistirProfissional("Profissional Chat", "profchat@teste.com");
+        especialistaPadrao = criarEPersistirEspecialista("Especialista Chat", "espchat@teste.com");
     }
 
     @Nested
@@ -74,11 +74,11 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
     class CriacaoIntegracaoTests {
 
         @Test
-        @DisplayName("Deve criar chat com relacionamentos Cliente e Profissional")
+        @DisplayName("Deve criar chat com relacionamentos Cliente e Especialista")
         void deveCriarChatComRelacionamentos() {
             ChatDtoIn chatDto = criarChatDto(
                     clientePadrao.getId(),
-                    profissionalPadrao.getId(),
+                    especialistaPadrao.getId(),
                     45,
                     "Conversa sobre pronúncia"
             );
@@ -88,19 +88,19 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isNotNull();
             assertThat(resultado.getClienteId()).isEqualTo(clientePadrao.getId());
-            assertThat(resultado.getProfissionalId()).isEqualTo(profissionalPadrao.getId());
+            assertThat(resultado.getProfissionalId()).isEqualTo(especialistaPadrao.getId());
             assertThat(resultado.getDuracao()).isEqualTo(45);
 
             // Validando se realmente persistiu no banco H2
             ChatEntity chatNoBanco = chatRepository.findById(resultado.getId()).get();
             assertThat(chatNoBanco.getCliente().getId()).isEqualTo(clientePadrao.getId());
-            assertThat(chatNoBanco.getProfissional().getId()).isEqualTo(profissionalPadrao.getId());
+            assertThat(chatNoBanco.getEspecialista().getId()).isEqualTo(especialistaPadrao.getId());
         }
 
         @Test
         @DisplayName("Deve lançar exceção ao criar chat com cliente inexistente")
         void deveLancarExcecaoComClienteInexistente() {
-            ChatDtoIn chatDto = criarChatDto(999L, profissionalPadrao.getId(), 30, "Conversa");
+            ChatDtoIn chatDto = criarChatDto(999L, especialistaPadrao.getId(), 30, "Conversa");
 
             assertThatThrownBy(() -> chatService.criar(chatDto))
                     .isInstanceOf(EntityNotFoundException.class)
@@ -108,13 +108,13 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("Deve lançar exceção ao criar chat com profissional inexistente")
-        void deveLancarExcecaoComProfissionalInexistente() {
+        @DisplayName("Deve lançar exceção ao criar chat com especialista inexistente")
+        void deveLancarExcecaoComEspecialistaInexistente() {
             ChatDtoIn chatDto = criarChatDto(clientePadrao.getId(), 999L, 30, "Conversa");
 
             assertThatThrownBy(() -> chatService.criar(chatDto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("Profissional");
+                    .hasMessageContaining("Especialista");
         }
 
         @Test
@@ -122,7 +122,7 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         void deveValidarDuracaoNegativa() {
             ChatDtoIn chatDto = criarChatDto(
                     clientePadrao.getId(),
-                    profissionalPadrao.getId(),
+                    especialistaPadrao.getId(),
                     -10,
                     "Conversa"
             );
@@ -154,9 +154,9 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         void deveBuscarChatsPorClienteId() {
             ClienteEntity outroCliente = criarEPersistirCliente("Outro Cliente", "outro@teste.com");
 
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 30);
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 45);
-            criarEPersistirChat(outroCliente, profissionalPadrao, 60);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 30);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 45);
+            criarEPersistirChat(outroCliente, especialistaPadrao, 60);
 
             List<ChatDtoOut> resultados = chatService.buscarPorClienteId(clientePadrao.getId());
 
@@ -165,19 +165,19 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("Deve buscar chats por profissional ID")
-        void deveBuscarChatsPorProfissionalId() {
-            ProfissionalEntity outroProfissional = criarEPersistirProfissional(
-                    "Outro Profissional", "outro@teste.com");
+        @DisplayName("Deve buscar chats por especialista ID")
+        void deveBuscarChatsPorEspecialistaId() {
+            EspecialistaEntity outroEspecialista = criarEPersistirEspecialista(
+                    "Outro Especialista", "outro@teste.com");
 
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 30);
-            criarEPersistirChat(clientePadrao, outroProfissional, 45);
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 60);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 30);
+            criarEPersistirChat(clientePadrao, outroEspecialista, 45);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 60);
 
-            List<ChatDtoOut> resultados = chatService.buscarPorProfissionalId(profissionalPadrao.getId());
+            List<ChatDtoOut> resultados = chatService.buscarPorEspecialistaId(especialistaPadrao.getId());
 
             assertThat(resultados).hasSize(2);
-            assertThat(resultados).allMatch(c -> c.getProfissionalId().equals(profissionalPadrao.getId()));
+            assertThat(resultados).allMatch(c -> c.getProfissionalId().equals(especialistaPadrao.getId()));
         }
     }
 
@@ -193,7 +193,8 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
             criarEPersistirChat(60, "Chat longo 1");
             criarEPersistirChat(90, "Chat longo 2");
 
-            List<ChatDtoOut> resultados = chatService.buscarComDuracaoMaiorQue(30);
+            // funcionalidade descontinuada: usamos buscarChatsLongos()
+            List<ChatDtoOut> resultados = chatService.buscarChatsLongos();
 
             assertThat(resultados).hasSize(3);
             assertThat(resultados).allMatch(c -> c.getDuracao() > 30);
@@ -221,7 +222,7 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
             criarEPersistirChat(10, "Chat 1");
             criarEPersistirChat(20, "Chat 2");
 
-            List<ChatDtoOut> resultados = chatService.buscarComDuracaoMaiorQue(50);
+            List<ChatDtoOut> resultados = chatService.buscarChatsLongos();
 
             assertThat(resultados).isEmpty();
         }
@@ -238,7 +239,7 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
 
             ChatDtoIn dadosAtualizados = new ChatDtoIn();
             dadosAtualizados.setClienteId(clientePadrao.getId());
-            dadosAtualizados.setProfissionalId(profissionalPadrao.getId());
+            dadosAtualizados.setEspecialistaId(especialistaPadrao.getId());
             dadosAtualizados.setDuracao(60);
             dadosAtualizados.setConversa("Conversa atualizada e estendida");
 
@@ -259,7 +260,7 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         void deveLancarExcecaoAoAtualizarInexistente() {
             ChatDtoIn dadosAtualizados = new ChatDtoIn();
             dadosAtualizados.setClienteId(clientePadrao.getId());
-            dadosAtualizados.setProfissionalId(profissionalPadrao.getId());
+            dadosAtualizados.setEspecialistaId(especialistaPadrao.getId());
             dadosAtualizados.setDuracao(30);
 
             assertThatThrownBy(() -> chatService.atualizar(999L, dadosAtualizados))
@@ -298,9 +299,9 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("Deve manter múltiplos chats para o mesmo cliente")
         void deveManterMultiplosChatsMesmoCliente() {
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 30);
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 45);
-            criarEPersistirChat(clientePadrao, profissionalPadrao, 60);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 30);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 45);
+            criarEPersistirChat(clientePadrao, especialistaPadrao, 60);
 
             List<ChatDtoOut> chatsDoCliente = chatService.buscarPorClienteId(clientePadrao.getId());
 
@@ -310,17 +311,17 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("Deve manter múltiplos chats para o mesmo profissional")
-        void deveManterMultiplosChatsMesmoProfissional() {
+        @DisplayName("Deve manter múltiplos chats para o mesmo especialista")
+        void deveManterMultiplosChatsMesmoEspecialista() {
             ClienteEntity cliente1 = criarEPersistirCliente("Cliente 1", "c1@teste.com");
             ClienteEntity cliente2 = criarEPersistirCliente("Cliente 2", "c2@teste.com");
 
-            criarEPersistirChat(cliente1, profissionalPadrao, 30);
-            criarEPersistirChat(cliente2, profissionalPadrao, 45);
+            criarEPersistirChat(cliente1, especialistaPadrao, 30);
+            criarEPersistirChat(cliente2, especialistaPadrao, 45);
 
-            List<ChatDtoOut> chatsDoProfissional = chatService.buscarPorProfissionalId(profissionalPadrao.getId());
+            List<ChatDtoOut> chatsDoEspecialista = chatService.buscarPorEspecialistaId(especialistaPadrao.getId());
 
-            assertThat(chatsDoProfissional).hasSize(2);
+            assertThat(chatsDoEspecialista).hasSize(2);
         }
     }
 
@@ -334,38 +335,38 @@ class ChatServiceIntegrationTest extends BaseIntegrationTest {
         return clienteRepository.save(cliente);
     }
 
-    private ProfissionalEntity criarEPersistirProfissional(String nome, String login) {
-        ProfissionalEntity profissional = new ProfissionalEntity();
-        profissional.setNome(nome);
-        profissional.setLogin(login);
-        profissional.setSenha("senha123");
-        profissional.setCertificados("CRFa 12345");
-        profissional.setExperiencia(5);
-        return profissionalRepository.save(profissional);
+    private EspecialistaEntity criarEPersistirEspecialista(String nome, String login) {
+        EspecialistaEntity esp = new EspecialistaEntity();
+        esp.setNome(nome);
+        esp.setLogin(login);
+        esp.setSenha("senha123");
+        esp.setCrmFono("CRFa 12345");
+        esp.setEspecialidade("Fono");
+        return especialistaRepository.save(esp);
     }
 
     private ChatEntity criarEPersistirChat(Integer duracao, String conversa) {
-        return criarEPersistirChat(clientePadrao, profissionalPadrao, duracao, conversa);
+        return criarEPersistirChat(clientePadrao, especialistaPadrao, duracao, conversa);
     }
 
-    private ChatEntity criarEPersistirChat(ClienteEntity cliente, ProfissionalEntity profissional, Integer duracao) {
-        return criarEPersistirChat(cliente, profissional, duracao, "Conversa padrão");
+    private ChatEntity criarEPersistirChat(ClienteEntity cliente, EspecialistaEntity especialista, Integer duracao) {
+        return criarEPersistirChat(cliente, especialista, duracao, "Conversa padrão");
     }
 
-    private ChatEntity criarEPersistirChat(ClienteEntity cliente, ProfissionalEntity profissional,
+    private ChatEntity criarEPersistirChat(ClienteEntity cliente, EspecialistaEntity especialista,
                                            Integer duracao, String conversa) {
         ChatEntity chat = new ChatEntity();
         chat.setCliente(cliente);
-        chat.setProfissional(profissional);
+        chat.setEspecialista(especialista);
         chat.setDuracao(duracao);
         chat.setConversa(conversa);
         return chatRepository.save(chat);
     }
 
-    private ChatDtoIn criarChatDto(Long clienteId, Long profissionalId, Integer duracao, String conversa) {
+    private ChatDtoIn criarChatDto(Long clienteId, Long especialistaId, Integer duracao, String conversa) {
         ChatDtoIn dto = new ChatDtoIn();
         dto.setClienteId(clienteId);
-        dto.setProfissionalId(profissionalId);
+        dto.setEspecialistaId(especialistaId);
         dto.setDuracao(duracao);
         dto.setConversa(conversa);
         return dto;

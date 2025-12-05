@@ -20,14 +20,23 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final ChatRepository chatRepository;
+    private final com.inatel.prototipo_ia.repository.ConsultaRepository consultaRepository;
+    private final com.inatel.prototipo_ia.repository.CertificadoRepository certificadoRepository;
+    private final com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder; // IMPORTANTE
 
     // Construtor atualizado para injetar o PasswordEncoder
     public ClienteService(ClienteRepository clienteRepository, 
-                          ChatRepository chatRepository, 
+                          ChatRepository chatRepository,
+                          com.inatel.prototipo_ia.repository.ConsultaRepository consultaRepository,
+                          com.inatel.prototipo_ia.repository.CertificadoRepository certificadoRepository,
+                          com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository,
                           PasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
         this.chatRepository = chatRepository;
+        this.consultaRepository = consultaRepository;
+        this.certificadoRepository = certificadoRepository;
+        this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -36,6 +45,10 @@ public class ClienteService {
      */
     public ClienteDtoOut salvar(ClienteDtoIn clienteCreate) {
         validarClienteDto(clienteCreate);
+
+        if (clienteCreate.getLogin() != null && usuarioRepository.findByLogin(clienteCreate.getLogin()) != null) {
+            throw new IllegalStateException("Login já cadastrado");
+        }
 
         ClienteEntity novo = new ClienteEntity();
         aplicarDtoNoEntity(novo, clienteCreate);
@@ -96,9 +109,9 @@ public class ClienteService {
     }
 
     private ClienteDtoOut toDto(ClienteEntity cliente) {
-        List<Long> chatIds = (cliente.getChats() != null)
-                ? cliente.getChats().stream().map(c -> c.getId()).collect(Collectors.toList())
-                : null;
+        List<Long> chatIds = chatRepository.findByClienteId(cliente.getId()).stream().map(c -> c.getId()).collect(Collectors.toList());
+        List<Long> consultaIds = consultaRepository.findByClienteId(cliente.getId()).stream().map(c -> c.getId()).collect(Collectors.toList());
+        List<Long> certificadoIds = certificadoRepository.findByClienteId(cliente.getId()).stream().map(c -> c.getId()).collect(Collectors.toList());
         ClienteDtoOut dto = new ClienteDtoOut();
         dto.setId(cliente.getId());
         dto.setNome(cliente.getNome());
@@ -106,6 +119,8 @@ public class ClienteService {
         dto.setEndereco(cliente.getEndereco());
         dto.setNivel(cliente.getNivel());
         dto.setChatIds(chatIds);
+        dto.setConsultaIds(consultaIds);
+        dto.setCertificadoIds(certificadoIds);
         return dto;
     }
 

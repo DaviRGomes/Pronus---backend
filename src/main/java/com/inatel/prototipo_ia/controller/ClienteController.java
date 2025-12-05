@@ -42,8 +42,14 @@ public class ClienteController {
     // Criar cliente (DTO In -> DTO Out)
     @PostMapping
     public ResponseEntity<ClienteDtoOut> criar(@RequestBody ClienteDtoIn cliente) {
-        ClienteDtoOut clienteCriado = service.salvar(cliente);
-        return ResponseEntity.ok(clienteCriado);
+        try {
+            ClienteDtoOut clienteCriado = service.salvar(cliente);
+            return ResponseEntity.ok(clienteCriado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // Buscar todos os clientes (DTO Out)

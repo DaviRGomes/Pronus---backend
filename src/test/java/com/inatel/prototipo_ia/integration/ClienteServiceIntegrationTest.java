@@ -4,10 +4,13 @@ import com.inatel.prototipo_ia.dto.in.ClienteDtoIn;
 import com.inatel.prototipo_ia.dto.out.ClienteDtoOut;
 import com.inatel.prototipo_ia.entity.ChatEntity;
 import com.inatel.prototipo_ia.entity.ClienteEntity;
-import com.inatel.prototipo_ia.entity.ProfissionalEntity;
+import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ClienteRepository;
-import com.inatel.prototipo_ia.repository.ProfissionalRepository;
+import com.inatel.prototipo_ia.repository.EspecialistaRepository;
+import com.inatel.prototipo_ia.repository.ConsultaRepository;
+import com.inatel.prototipo_ia.repository.CertificadoRepository;
+import com.inatel.prototipo_ia.repository.UsuarioRepository;
 import com.inatel.prototipo_ia.service.ClienteService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +57,12 @@ class ClienteServiceIntegrationTest extends BaseIntegrationTest {
 
         @Bean
         public ClienteService clienteService(ClienteRepository clienteRepository,
-                                              ChatRepository chatRepository,
-                                              PasswordEncoder passwordEncoder) {
-            return new ClienteService(clienteRepository, chatRepository, passwordEncoder);
+                                             ChatRepository chatRepository,
+                                             ConsultaRepository consultaRepository,
+                                             CertificadoRepository certificadoRepository,
+                                             UsuarioRepository usuarioRepository,
+                                             PasswordEncoder passwordEncoder) {
+            return new ClienteService(clienteRepository, chatRepository, consultaRepository, certificadoRepository, usuarioRepository, passwordEncoder);
         }
     }
 
@@ -67,7 +73,7 @@ class ClienteServiceIntegrationTest extends BaseIntegrationTest {
     private ChatRepository chatRepository;
 
     @Autowired
-    private ProfissionalRepository profissionalRepository;
+    private EspecialistaRepository especialistaRepository;
 
     @Autowired
     private ClienteService clienteService;
@@ -78,7 +84,7 @@ class ClienteServiceIntegrationTest extends BaseIntegrationTest {
         // Ordem importante: deleta chats primeiro (foreign keys)
         chatRepository.deleteAll();
         clienteRepository.deleteAll();
-        profissionalRepository.deleteAll();
+        especialistaRepository.deleteAll();
     }
 
     @Nested
@@ -231,15 +237,17 @@ class ClienteServiceIntegrationTest extends BaseIntegrationTest {
             ClienteEntity cliente = clienteRepository.save(
                     criarClienteEntity("Cliente Com Chat", "comchat@teste.com"));
 
-            ProfissionalEntity profissional = new ProfissionalEntity();
-            profissional.setNome("Profissional Teste");
-            profissional.setLogin("prof@teste.com");
-            profissional.setSenha("senha");
-            profissional = profissionalRepository.save(profissional);
+            EspecialistaEntity especialista = new EspecialistaEntity();
+            especialista.setNome("Especialista Teste");
+            especialista.setLogin("esp@teste.com");
+            especialista.setSenha("senha");
+            especialista.setCrmFono("CRFa 000");
+            especialista.setEspecialidade("Fono");
+            especialista = especialistaRepository.save(especialista);
 
             ChatEntity chat = new ChatEntity();
             chat.setCliente(cliente);
-            chat.setProfissional(profissional);
+            chat.setEspecialista(especialista);
             chat.setDuracao(30);
             chatRepository.save(chat);
 

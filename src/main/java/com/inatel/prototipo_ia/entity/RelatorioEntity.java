@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import com.inatel.prototipo_ia.entity.EspecialistaEntity;
+import java.util.List;
 
 @Entity
 @Table(name = "Relatorio")
@@ -29,4 +30,7 @@ public class RelatorioEntity {
     @ManyToOne
     @JoinColumn(name = "especialista_id", nullable = true)
     private EspecialistaEntity especialista;
+
+    @OneToMany(mappedBy = "relatorio")
+    private List<DetalheErroEntity> detalhes;
 }

@@ -18,4 +18,10 @@ public class ClienteEntity extends UsuarioEntity {
     // Relacionamento com Chat (um cliente pode ter vários chats)
     @OneToMany(mappedBy = "cliente")
     private List<ChatEntity> chats;
+
+    @OneToMany(mappedBy = "cliente")
+    private List<ConsultaEntity> consultas;
+
+    @OneToMany(mappedBy = "cliente")
+    private List<CertificadoEntity> certificados;
 }

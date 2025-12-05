@@ -6,6 +6,8 @@ import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import com.inatel.prototipo_ia.repository.ConsultaRepository;
 import com.inatel.prototipo_ia.repository.DisponibilidadeRepository;
 import com.inatel.prototipo_ia.repository.EspecialistaRepository;
+import com.inatel.prototipo_ia.repository.ChatRepository;
+import com.inatel.prototipo_ia.repository.RelatorioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +41,15 @@ class EspecialistaServiceTest {
 
     @Mock
     private DisponibilidadeRepository disponibilidadeRepository;
+
+    @Mock
+    private ChatRepository chatRepository;
+
+    @Mock
+    private RelatorioRepository relatorioRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private EspecialistaService especialistaService;

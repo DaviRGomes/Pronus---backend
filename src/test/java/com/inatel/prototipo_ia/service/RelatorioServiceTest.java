@@ -6,6 +6,8 @@ import com.inatel.prototipo_ia.entity.ChatEntity;
 import com.inatel.prototipo_ia.entity.RelatorioEntity;
 import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.RelatorioRepository;
+import com.inatel.prototipo_ia.repository.EspecialistaRepository;
+import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,6 +34,9 @@ class RelatorioServiceTest {
 
     @Mock
     private ChatRepository chatRepository;
+
+    @Mock
+    private EspecialistaRepository especialistaRepository;
 
     @InjectMocks
     private RelatorioService relatorioService;
@@ -70,6 +75,41 @@ class RelatorioServiceTest {
             assertThat(resultado.getAnaliseFono()).isEqualTo("Paciente apresenta dificuldade em falar R");
             assertThat(resultado.getChatId()).isEqualTo(1L);
 
+            verify(relatorioRepository, times(1)).save(any(RelatorioEntity.class));
+        }
+
+        @Test
+        @DisplayName("Deve criar relatório com especialista vinculado")
+        void deveCriarRelatorioComEspecialista() {
+            RelatorioDtoIn relatorioDto = new RelatorioDtoIn();
+            relatorioDto.setChatId(2L);
+            relatorioDto.setAnaliseFono("Análise");
+            relatorioDto.setAcuracia(0.7f);
+            relatorioDto.setEspecialistaId(50L);
+
+            ChatEntity chat = new ChatEntity();
+            chat.setId(2L);
+
+            EspecialistaEntity esp = new EspecialistaEntity();
+            esp.setId(50L);
+
+            RelatorioEntity salvo = new RelatorioEntity();
+            salvo.setId(200L);
+            salvo.setChat(chat);
+            salvo.setAnaliseFono("Análise");
+            salvo.setAcuracia(0.7f);
+            salvo.setEspecialista(esp);
+
+            when(chatRepository.findById(2L)).thenReturn(Optional.of(chat));
+            when(especialistaRepository.findById(50L)).thenReturn(Optional.of(esp));
+            when(relatorioRepository.existsByChatId(2L)).thenReturn(false);
+            when(relatorioRepository.save(any(RelatorioEntity.class))).thenReturn(salvo);
+
+            RelatorioDtoOut resultado = relatorioService.criar(relatorioDto);
+
+            assertThat(resultado).isNotNull();
+            assertThat(resultado.getId()).isEqualTo(200L);
+            assertThat(resultado.getChatId()).isEqualTo(2L);
             verify(relatorioRepository, times(1)).save(any(RelatorioEntity.class));
         }
 
@@ -251,6 +291,28 @@ class RelatorioServiceTest {
             assertThat(resultado.get().getChatId()).isEqualTo(5L);
             assertThat(resultado.get().getId()).isEqualTo(20L);
             verify(relatorioRepository, times(1)).findByChatId(5L);
+        }
+
+        @Test
+        @DisplayName("Deve buscar relatórios por cliente e especialista")
+        void deveBuscarRelatoriosPorClienteEEspecialista() {
+            ChatEntity chat = new ChatEntity();
+            chat.setId(9L);
+            RelatorioEntity r = new RelatorioEntity();
+            r.setId(300L);
+            r.setChat(chat);
+            r.setAnaliseFono("A");
+            r.setAcuracia(0.6f);
+
+            when(relatorioRepository.findByChatClienteIdAndEspecialistaId(10L, 20L))
+                    .thenReturn(Arrays.asList(r));
+
+            List<RelatorioDtoOut> resultados = relatorioService.buscarPorClienteIdEEspecialistaId(10L, 20L);
+
+            assertThat(resultados).hasSize(1);
+            assertThat(resultados.get(0).getId()).isEqualTo(300L);
+            assertThat(resultados.get(0).getChatId()).isEqualTo(9L);
+            verify(relatorioRepository, times(1)).findByChatClienteIdAndEspecialistaId(10L, 20L);
         }
     }
 

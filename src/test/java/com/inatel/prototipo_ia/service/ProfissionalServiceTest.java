@@ -3,7 +3,6 @@ package com.inatel.prototipo_ia.service;
 import com.inatel.prototipo_ia.dto.in.ProfissionalDtoIn;
 import com.inatel.prototipo_ia.dto.out.ProfissionalDtoOut;
 import com.inatel.prototipo_ia.entity.ProfissionalEntity;
-import com.inatel.prototipo_ia.repository.ChatRepository;
 import com.inatel.prototipo_ia.repository.ProfissionalRepository;
 import com.inatel.prototipo_ia.repository.TratamentoRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,8 +32,6 @@ class ProfissionalServiceTest {
     @Mock
     private ProfissionalRepository profissionalRepository;
 
-    @Mock
-    private ChatRepository chatRepository;
 
     @Mock
     private TratamentoRepository tratamentoRepository;
@@ -248,26 +245,13 @@ class ProfissionalServiceTest {
     @DisplayName("Testes de Deleção de Profissional")
     class DelecaoProfissionalTests {
 
-        @Test
-        @DisplayName("Deve lançar exceção ao tentar deletar profissional vinculado a um chat")
-        void deveLancarExcecaoAoTentarDeletarProfissionalEmUsoEmChat() {
-            Long profissionalId = 1L;
-            when(profissionalRepository.existsById(profissionalId)).thenReturn(true);
-            when(chatRepository.existsByProfissionalId(profissionalId)).thenReturn(true);
-
-            assertThatThrownBy(() -> profissionalService.deletar(profissionalId))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("chat");
-
-            verify(profissionalRepository, never()).deleteById(anyLong());
-        }
+        // Removido teste de vínculo com chat: regra migrou para Especialista
 
         @Test
         @DisplayName("Deve lançar exceção ao tentar deletar profissional vinculado a um tratamento")
         void deveLancarExcecaoAoTentarDeletarProfissionalEmUsoEmTratamento() {
             Long profissionalId = 2L;
             when(profissionalRepository.existsById(profissionalId)).thenReturn(true);
-            when(chatRepository.existsByProfissionalId(profissionalId)).thenReturn(false);
             when(tratamentoRepository.existsByProfissionalId(profissionalId)).thenReturn(true);
 
             assertThatThrownBy(() -> profissionalService.deletar(profissionalId))
@@ -282,7 +266,6 @@ class ProfissionalServiceTest {
         void deveDeletarProfissionalComSucesso() {
             Long profissionalId = 3L;
             when(profissionalRepository.existsById(profissionalId)).thenReturn(true);
-            when(chatRepository.existsByProfissionalId(profissionalId)).thenReturn(false);
             when(tratamentoRepository.existsByProfissionalId(profissionalId)).thenReturn(false);
 
             profissionalService.deletar(profissionalId);

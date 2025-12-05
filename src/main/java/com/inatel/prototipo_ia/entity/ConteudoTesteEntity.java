@@ -3,6 +3,7 @@ package com.inatel.prototipo_ia.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Entity
 @Table(name = "conteudoteste")
@@ -23,4 +24,7 @@ public class ConteudoTesteEntity {
     private String dificuldade;
 
     private String idioma;
+
+    @OneToMany(mappedBy = "conteudoTeste")
+    private List<TratamentoEntity> tratamentos;
 }

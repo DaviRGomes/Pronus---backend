@@ -51,10 +51,10 @@ public class ChatService {
         // ----------------------------------------
 
         ClienteEntity cliente = clienteRepository.findById(chatDto.getClienteId())
-                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + chatDto.getClienteId()));
 
         EspecialistaEntity especialista = especialistaRepository.findById(chatDto.getEspecialistaId())
-                .orElseThrow(() -> new EntityNotFoundException("Especialista não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Especialista não encontrado: " + chatDto.getEspecialistaId()));
         
         ChatEntity entity = new ChatEntity();
         entity.setDuracao(chatDto.getDuracao());
@@ -69,7 +69,7 @@ public class ChatService {
     // ... (Mantenha o restante dos métodos IGUAIS: deletar, buscarTodos, etc.) ...
     
     public void deletar(Long id) {
-        if (!chatRepository.existsById(id)) throw new EntityNotFoundException("Chat não encontrado");
+        if (!chatRepository.existsById(id)) throw new EntityNotFoundException("Chat não encontrado: " + id);
         chatRepository.deleteById(id);
     }
 
@@ -104,7 +104,7 @@ public class ChatService {
     
     public ChatDtoOut atualizar(Long id, ChatDtoIn chatDto) {
         ChatEntity entity = chatRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Chat não encontrado"));
+            .orElseThrow(() -> new EntityNotFoundException("Chat não encontrado: " + id));
         entity.setDuracao(chatDto.getDuracao());
         entity.setConversa(chatDto.getConversa());
         return toDto(chatRepository.save(entity));
@@ -124,8 +124,9 @@ public class ChatService {
     }
 
     private void validarChatDto(ChatDtoIn chat) {
-        if (chat == null) throw new IllegalArgumentException("Chat nulo");
-        if (chat.getClienteId() == null) throw new IllegalArgumentException("Cliente obrigatório");
+        if (chat == null) throw new IllegalArgumentException("chat nulo");
+        if (chat.getClienteId() == null) throw new IllegalArgumentException("cliente obrigatório");
         if (chat.getEspecialistaId() == null) throw new IllegalArgumentException("Especialista obrigatório");
+        if (chat.getDuracao() != null && chat.getDuracao() < 0) throw new IllegalArgumentException("duração inválida");
     }
 }

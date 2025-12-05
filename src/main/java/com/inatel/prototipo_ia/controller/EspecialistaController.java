@@ -39,8 +39,14 @@ public class EspecialistaController {
 
     @PostMapping
     public ResponseEntity<EspecialistaDtoOut> criar(@RequestBody EspecialistaDtoIn especialista) {
-        EspecialistaDtoOut criado = service.criar(especialista);
-        return ResponseEntity.ok(criado);
+        try {
+            EspecialistaDtoOut criado = service.criar(especialista);
+            return ResponseEntity.ok(criado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping

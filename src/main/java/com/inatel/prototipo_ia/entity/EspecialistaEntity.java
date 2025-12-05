@@ -3,6 +3,7 @@ package com.inatel.prototipo_ia.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
 
 @Entity
 @Table(name = "Especialista")
@@ -15,4 +16,16 @@ public class EspecialistaEntity extends UsuarioEntity {
     private String crmFono;
 
     private String especialidade;
+
+    @OneToMany(mappedBy = "especialista")
+    private List<ConsultaEntity> consultas;
+
+    @OneToMany(mappedBy = "especialista")
+    private List<DisponibilidadeEntity> disponibilidades;
+
+    @OneToMany(mappedBy = "especialista")
+    private List<ChatEntity> chats;
+
+    @OneToMany(mappedBy = "especialista")
+    private List<RelatorioEntity> relatorios;
 }

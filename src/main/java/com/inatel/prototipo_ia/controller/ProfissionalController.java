@@ -64,14 +64,7 @@ public class ProfissionalController {
                           .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/me/chats")
-    public ResponseEntity<List<ChatDtoOut>> meusChats(@AuthenticationPrincipal UsuarioEntity principal) {
-        if (!profissionalRepository.existsById(principal.getId())) {
-            return ResponseEntity.status(403).build();
-        }
-        List<ChatDtoOut> chats = chatService.buscarPorProfissionalId(principal.getId());
-        return ResponseEntity.ok(chats);
-    }
+    // Endpoint de chats removido: chats agora pertencem ao Especialista
 
     @GetMapping("/me/relatorios/cliente/{clienteId}")
     public ResponseEntity<List<RelatorioDtoOut>> relatoriosDoCliente(@AuthenticationPrincipal UsuarioEntity principal,

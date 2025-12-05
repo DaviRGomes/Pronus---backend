@@ -18,36 +18,35 @@ import java.util.stream.Collectors;
 public class SecretariaService {
 
     private final SecretariaRepository secretariaRepository;
+    private final com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder; // Campo declarado
 
     // --- CONSTRUTOR CORRIGIDO (INJETANDO O PASSWORD ENCODER) ---
-    public SecretariaService(SecretariaRepository secretariaRepository, PasswordEncoder passwordEncoder) {
+    public SecretariaService(SecretariaRepository secretariaRepository, com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.secretariaRepository = secretariaRepository;
-        this.passwordEncoder = passwordEncoder; // <-- ISTO FALTAVA!
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public SecretariaDtoOut criar(SecretariaDtoIn secretariaDto) {
-        // Validações básicas
         validarSecretariaDto(secretariaDto);
 
-        // Validação de email único
         if (secretariaRepository.existsByEmail(secretariaDto.getEmail())) {
             throw new IllegalStateException("Já existe uma secretária cadastrada com o email: " + secretariaDto.getEmail());
+        }
+
+        if (secretariaDto.getLogin() != null && usuarioRepository.findByLogin(secretariaDto.getLogin()) != null) {
+            throw new IllegalStateException("Login já cadastrado");
         }
 
         SecretariaEntity entity = new SecretariaEntity();
         aplicarDtoNoEntity(entity, secretariaDto);
 
-        // --- CRIPTOGRAFIA E LOGIN ---
         if (secretariaDto.getLogin() != null) {
             entity.setLogin(secretariaDto.getLogin());
         }
-        
-        // Verifica se a senha existe antes de criptografar para evitar NullPointer
         if (secretariaDto.getSenha() != null && !secretariaDto.getSenha().isBlank()) {
             entity.setSenha(passwordEncoder.encode(secretariaDto.getSenha()));
-        } else {
-             throw new IllegalArgumentException("A senha é obrigatória para cadastro.");
         }
 
         SecretariaEntity salvo = secretariaRepository.save(entity);
@@ -75,8 +74,11 @@ public class SecretariaService {
     }
     
     private void validarSecretariaDto(SecretariaDtoIn dto) {
-        if (dto == null) throw new IllegalArgumentException("Dados inválidos");
-        if (dto.getNome() == null || dto.getNome().isBlank()) throw new IllegalArgumentException("Nome obrigatório");
+        if (dto == null) throw new IllegalArgumentException("DTO nulo");
+        if (dto.getNome() == null || dto.getNome().isBlank()) throw new IllegalArgumentException("nome obrigatório");
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) throw new IllegalArgumentException("email obrigatório");
+        if (!dto.getEmail().contains("@")) throw new IllegalArgumentException("email deve ser válido");
+        if (dto.getIdade() != null && dto.getIdade() < 0) throw new IllegalArgumentException("idade inválida");
     }
     
     // Métodos de busca para evitar erros de compilação no Controller
@@ -97,13 +99,21 @@ public class SecretariaService {
     }
     public SecretariaDtoOut atualizar(Long id, SecretariaDtoIn dto) {
         Optional<SecretariaEntity> op = secretariaRepository.findById(id);
-        if (op.isEmpty()) throw new EntityNotFoundException("ID não encontrado");
+        if (op.isEmpty()) throw new EntityNotFoundException("ID não encontrado: " + id);
         SecretariaEntity entity = op.get();
+
+        String novoEmail = dto.getEmail();
+        if (novoEmail != null && !novoEmail.equalsIgnoreCase(entity.getEmail())) {
+            if (secretariaRepository.existsByEmail(novoEmail)) {
+                throw new IllegalStateException("Já existe uma secretária cadastrada com o email: " + novoEmail);
+            }
+        }
+
         aplicarDtoNoEntity(entity, dto);
         return toDto(secretariaRepository.save(entity));
     }
     public void deletar(Long id) {
-        if (!secretariaRepository.existsById(id)) throw new EntityNotFoundException("ID não encontrado");
+        if (!secretariaRepository.existsById(id)) throw new EntityNotFoundException("ID não encontrado: " + id);
         secretariaRepository.deleteById(id);
     }
 }

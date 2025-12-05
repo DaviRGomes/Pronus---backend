@@ -19,4 +19,7 @@ public interface RelatorioRepository extends JpaRepository<RelatorioEntity, Long
 
     // Buscar relatórios por cliente e especialista
     List<RelatorioEntity> findByChatClienteIdAndEspecialistaId(Long clienteId, Long especialistaId);
+
+    // Buscar relatórios por especialista
+    java.util.List<RelatorioEntity> findByEspecialistaId(Long especialistaId);
 }

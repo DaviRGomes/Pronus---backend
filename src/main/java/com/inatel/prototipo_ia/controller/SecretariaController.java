@@ -19,8 +19,14 @@ public class SecretariaController {
 
     @PostMapping
     public ResponseEntity<SecretariaDtoOut> criar(@RequestBody SecretariaDtoIn secretaria) {
-        SecretariaDtoOut criado = service.criar(secretaria);
-        return ResponseEntity.ok(criado);
+        try {
+            SecretariaDtoOut criado = service.criar(secretaria);
+            return ResponseEntity.ok(criado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping

@@ -6,6 +6,8 @@ import com.inatel.prototipo_ia.entity.EspecialistaEntity;
 import com.inatel.prototipo_ia.repository.ConsultaRepository;
 import com.inatel.prototipo_ia.repository.DisponibilidadeRepository;
 import com.inatel.prototipo_ia.repository.EspecialistaRepository;
+import com.inatel.prototipo_ia.repository.ChatRepository;
+import com.inatel.prototipo_ia.repository.RelatorioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,20 +24,33 @@ public class EspecialistaService {
     private final EspecialistaRepository especialistaRepository;
     private final ConsultaRepository consultaRepository;
     private final DisponibilidadeRepository disponibilidadeRepository;
+    private final ChatRepository chatRepository;
+    private final RelatorioRepository relatorioRepository;
+    private final com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
     public EspecialistaService(EspecialistaRepository especialistaRepository,
                                ConsultaRepository consultaRepository,
                                DisponibilidadeRepository disponibilidadeRepository,
+                               ChatRepository chatRepository,
+                               RelatorioRepository relatorioRepository,
+                               com.inatel.prototipo_ia.repository.UsuarioRepository usuarioRepository,
                                PasswordEncoder passwordEncoder) {
         this.especialistaRepository = especialistaRepository;
         this.consultaRepository = consultaRepository;
         this.disponibilidadeRepository = disponibilidadeRepository;
+        this.chatRepository = chatRepository;
+        this.relatorioRepository = relatorioRepository;
+        this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public EspecialistaDtoOut criar(EspecialistaDtoIn especialistaDto) {
         validarEspecialistaDto(especialistaDto);
+
+        if (especialistaDto.getLogin() != null && usuarioRepository.findByLogin(especialistaDto.getLogin()) != null) {
+            throw new IllegalStateException("Login já cadastrado");
+        }
 
         EspecialistaEntity entity = new EspecialistaEntity();
         aplicarDtoNoEntity(entity, especialistaDto);
@@ -125,6 +140,10 @@ public class EspecialistaService {
         dto.setEndereco(entity.getEndereco());
         dto.setCrmFono(entity.getCrmFono());
         dto.setEspecialidade(entity.getEspecialidade());
+        dto.setConsultaIds(consultaRepository.findByEspecialistaId(entity.getId()).stream().map(c -> c.getId()).collect(java.util.stream.Collectors.toList()));
+        dto.setDisponibilidadeIds(disponibilidadeRepository.findByEspecialistaId(entity.getId()).stream().map(d -> d.getId()).collect(java.util.stream.Collectors.toList()));
+        dto.setChatIds(chatRepository.findByEspecialistaId(entity.getId()).stream().map(ch -> ch.getId()).collect(java.util.stream.Collectors.toList()));
+        dto.setRelatorioIds(relatorioRepository.findByEspecialistaId(entity.getId()).stream().map(r -> r.getId()).collect(java.util.stream.Collectors.toList()));
         return dto;
     }
 
